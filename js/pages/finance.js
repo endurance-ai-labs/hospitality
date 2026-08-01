@@ -143,6 +143,103 @@ renderPage('P&L by Unit', 'Restaurant format, drillable to source', ['QBO', 'R36
       '<td class="num">' + fmtPct(r.fourWall / r.netSales) + '</td></tr>';
   }).join('');
 
+  /* ---- financial exhibits ---- */
+  var t13 = RG.model().trailing13;
+  var t13Rows = t13.map(function (k) { return roll(k, units); });
+  var lab13 = t13.map(function (k) { return periodLabel(k).replace('FY', ''); });
+
+  var chartPL = RGChart.line('f-pl', {
+    labels: lab13,
+    series: [
+      { label: 'Net sales', data: t13Rows.map(function (r) { return r.netSales; }), fill: true },
+      { label: 'Prime cost', data: t13Rows.map(function (r) { return r.primeCost; }) },
+      { label: 'Controllables', data: t13Rows.map(function (r) { return r.controllables; }) },
+      { label: 'Occupancy', data: t13Rows.map(function (r) { return r.occupancy; }) },
+      { label: 'Four-wall EBITDA', data: t13Rows.map(function (r) { return r.fourWall; }) }
+    ], height: 300
+  });
+
+  var chartRatio = RGChart.line('f-ratio', {
+    labels: lab13, pct: true,
+    series: [
+      { label: 'COGS %', data: t13Rows.map(function (r) { return r.cogs / r.netSales; }) },
+      { label: 'Labor %', data: t13Rows.map(function (r) { return r.labor / r.netSales; }) },
+      { label: 'Prime %', data: t13Rows.map(function (r) { return r.primeCost / r.netSales; }) },
+      { label: 'Four-wall %', data: t13Rows.map(function (r) { return r.fourWall / r.netSales; }) }
+    ], height: 300
+  });
+
+  var chartStack = RGChart.bar('f-stack', {
+    labels: lab13, stacked: true,
+    series: [
+      { label: 'Cost of goods', data: t13Rows.map(function (r) { return r.cogs; }) },
+      { label: 'Labor', data: t13Rows.map(function (r) { return r.labor; }) },
+      { label: 'Controllables', data: t13Rows.map(function (r) { return r.controllables; }) },
+      { label: 'Occupancy', data: t13Rows.map(function (r) { return r.occupancy; }) },
+      { label: 'Four-wall EBITDA', data: t13Rows.map(function (r) { return Math.max(0, r.fourWall); }) }
+    ], height: 300
+  });
+
+  var unitBars = myUnits().map(function (u) { return { u: u, pl: RG.periodPL(u, P) }; })
+    .sort(function (a, b) { return b.pl.fourWall - a.pl.fourWall; });
+  var chartUnits = RGChart.bar('f-units', {
+    labels: unitBars.map(function (r) { return RG.unitById[r.u].short; }),
+    series: [
+      { label: 'Four-wall EBITDA', data: unitBars.map(function (r) { return r.pl.fourWall; }) },
+      { label: 'Occupancy', data: unitBars.map(function (r) { return r.pl.occupancy; }) }
+    ], height: 300
+  });
+
+  var controlSplit = RGChart.doughnut('f-ctrl', {
+    labels: ['Delivery commission', 'Card fees', 'Direct operating', 'Marketing', 'Repairs', 'Utilities', 'Admin'],
+    data: [cur.deliveryFees, cur.cardFees, cur.directOperating, cur.marketing,
+           cur.repairs, cur.utilities, cur.admin],
+    height: 250
+  });
+
+  var exhibits =
+    '<div class="chart-grid-2">' +
+      card({ title: 'P&L lines over 13 periods',
+        sub: 'One axis, five measures in the same unit — no dual scales',
+        sources: ['QBO'], body: chartPL }) +
+      card({ title: 'Cost ratios over 13 periods',
+        sub: 'The same story as a share of sales, which is how it is managed',
+        sources: ['QBO', 'R365'], body: chartRatio }) +
+    '</div>' +
+    '<div class="chart-grid-2">' +
+      card({ title: 'Where every sales dollar went', sub: 'Stacked by period — the bar height is net sales',
+        sources: ['QBO'], body: chartStack }) +
+      card({ title: 'Profit against occupancy by restaurant',
+        sub: 'Ranked by four-wall EBITDA for ' + esc(periodLabel(P)),
+        sources: ['QBO', 'Lease'], body: chartUnits }) +
+    '</div>' +
+    '<div class="chart-grid-2">' +
+      card({ title: 'Controllable expense split', sub: esc(periodLabel(P)) + ' · ' + fmt$(cur.controllables) + ' total',
+        sources: ['QBO'], body: controlSplit }) +
+      card({ title: 'Flow-through', sub: 'Incremental profit on incremental sales — the test of operating leverage',
+        sources: ['QBO'],
+        body: (function () {
+          var rows = [];
+          for (var i = 1; i < t13Rows.length; i++) {
+            var ds = t13Rows[i].netSales - t13Rows[i - 1].netSales;
+            var dp = t13Rows[i].fourWall - t13Rows[i - 1].fourWall;
+            rows.push({ k: lab13[i], ds: ds, dp: dp, ft: ds ? dp / ds : 0 });
+          }
+          return table({ id: 'ft', cols: [{ label: 'Period' }, { label: 'Δ net sales', num: true },
+            { label: 'Δ four-wall', num: true }, { label: 'Flow-through', num: true }],
+            rows: [rows.map(function (r) {
+              return '<tr><td><b>' + esc(r.k) + '</b></td>' +
+                '<td class="num">' + fmt$(r.ds) + '</td>' +
+                '<td class="num">' + fmt$(r.dp) + '</td>' +
+                '<td class="num">' + (Math.abs(r.ds) < 1000 ? '—' :
+                  '<span class="chip ' + (r.ft > 0.25 ? 'chip-good' : r.ft > 0 ? 'chip-flat' : 'chip-bad') +
+                  '">' + fmtPct(r.ft) + '</span>') + '</td></tr>';
+            }).join('')] }) +
+            '<div class="chart-note">Healthy full-service flow-through runs 25–35%. Below zero means ' +
+            'sales grew and profit did not — usually labor or food cost moving faster than volume.</div>';
+        })() }) +
+    '</div>';
+
   return '<div class="stat-row">' +
     [['Net sales', fmt$(cur.netSales), pri ? fmtPct((cur.netSales - pri.netSales) / pri.netSales) + ' vs. prior' : ''],
      ['Prime cost', fmtPct(cur.primeCost / cur.netSales), 'target ≤ 62.0%'],
@@ -156,6 +253,7 @@ renderPage('P&L by Unit', 'Restaurant format, drillable to source', ['QBO', 'R36
       return '<div class="stat"><span>' + esc(r[0]) + '</span><b>' + r[1] + '</b><i>' + r[2] + '</i></div>';
     }).join('') + '</div>' +
 
+    exhibits +
     (pb ? card({ title: 'Why profit moved', sub: periodLabel(prior.key) + ' → ' + periodLabel(P) +
       '. These five lines are exhaustive — nothing sits between net sales and four-wall EBITDA that is not here.',
       sources: ['QBO', 'R365', '7shifts'],

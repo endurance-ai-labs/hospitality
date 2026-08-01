@@ -437,6 +437,36 @@ function sparkline(values, opts) {
     'stroke-linecap="round" stroke-linejoin="round"/></svg>';
 }
 
+/* Full-width area sparkline for KPI tiles. Responsive via viewBox, so it
+   fills whatever the tile is rather than a fixed pixel width. */
+function sparkArea(values, opts) {
+  opts = opts || {};
+  if (!values || values.length < 2) return '';
+  var w = 200, h = 44, pad = 3;
+  var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+  var span = (max - min) || 1;
+  var pts = values.map(function (v, i) {
+    var x = pad + (i / (values.length - 1)) * (w - pad * 2);
+    var y = h - pad - ((v - min) / span) * (h - pad * 2 - 8);
+    return [x, y];
+  });
+  var line = pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
+  var area = 'M' + pts.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L ') +
+             ' L ' + (w - pad) + ' ' + h + ' L ' + pad + ' ' + h + ' Z';
+  var col = opts.color || 'var(--color-blue)';
+  var gid = 'sg' + Math.abs(RG.rand.hash(values.join(','))).toString(36);
+  var last = pts[pts.length - 1];
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" aria-hidden="true">' +
+    '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="' + col + '" stop-opacity=".22"/>' +
+    '<stop offset="100%" stop-color="' + col + '" stop-opacity="0"/></linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#' + gid + ')"/>' +
+    '<polyline points="' + line + '" fill="none" stroke="' + col + '" stroke-width="1.8" ' +
+    'vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="' + last[0].toFixed(1) + '" cy="' + last[1].toFixed(1) + '" r="2.6" fill="' + col + '" ' +
+    'vector-effect="non-scaling-stroke"/></svg>';
+}
+
 /* ---- period helpers used by every page ---- */
 function M() { return RG.model(); }
 function curPeriod() { return M().current; }

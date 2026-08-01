@@ -29,12 +29,18 @@
   }
   function activeUnits() {
     var u = activeUnit();
-    return u ? [u] : myUnits();
+    if (u) return [u];
+    return (global.RGScope ? RGScope.scope().units : myUnits());
   }
   function activePeriod() {
     var p = qs('period', '');
     return RG.CAL.periodByKey[p] ? p : RG.model().current;
   }
+  /* the comparison basis chosen in the scenario bar */
+  function activeCompare() {
+    return global.RGScope ? RGScope.scope().compare : 'prior';
+  }
+  global.activeCompare = activeCompare;
   global.activeUnit = activeUnit;
   global.activeUnits = activeUnits;
   global.activePeriod = activePeriod;
@@ -73,8 +79,8 @@
       esc(title) + '</h1><div class="sub">' + esc(sub) + ' · ' + esc(scope) + ' · ' +
       esc(periodLabel(activePeriod())) + ' (' + esc(periodRange(activePeriod())) + ')</div></div>' +
       '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-      unitSelect() + periodSelect() +
-      (sources ? srcChips.apply(null, sources) : '') + '</div></div>';
+      (sources ? srcChips.apply(null, sources) : '') + '</div></div>' +
+      (global.RGScope ? RGScope.render() : '');
   }
   global.pageHead = pageHead;
 
@@ -162,5 +168,8 @@
     if (!isSignedIn()) return;
     var app = document.getElementById('app');
     app.innerHTML = pageHead(title, sub, sources) + fn() + pageFoot();
+    /* charts and filters are declared inside the markup, built after it lands */
+    if (global.RGChart) RGChart.flush();
+    if (global.RGFilter) RGFilter.autoAttachAll();
   };
 })(typeof window !== 'undefined' ? window : globalThis);

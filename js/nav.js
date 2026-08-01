@@ -15,6 +15,7 @@ var BASE = '/hospitality';
 
 var NAV_GROUPS = [
   { id: 'home', label: 'Home', href: '/hospitality/', items: [] },
+  { id: 'explore', label: 'Explorer', href: '/hospitality/explore', items: [] },
   {
     id: 'sales', label: 'Sales',
     items: [
@@ -76,6 +77,7 @@ function _norm(p) {
 function _activeGroup(path) {
   path = _norm(path);
   if (path === '/') return 'home';
+  if (path.indexOf('/explore') === 0) return 'explore';
   for (var i = 0; i < NAV_GROUPS.length; i++) {
     var g = NAV_GROUPS[i];
     for (var j = 0; j < g.items.length; j++) {

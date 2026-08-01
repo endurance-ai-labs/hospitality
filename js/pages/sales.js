@@ -20,6 +20,102 @@ renderPage('Sales & Traffic', 'Volume, mix and what moved', ['Toast', 'Square', 
       return '<div class="stat"><span>' + esc(r[0]) + '</span><b>' + r[1] + '</b><i>' + r[2] + '</i></div>';
     }).join('') + '</div>';
 
+  /* ================= DAILY SALES CHART, with its own controls =================
+     Channel / daypart / weekday / metric all narrow the SERIES, independent of
+     the page scope. State is in the URL so a specific cut is shareable. */
+  var dMetric = qs('dm', 'net');
+  var dChannel = qs('dch', '');
+  var dDaypart = qs('ddp', '');
+  var dDow = qs('ddow', '');
+  var dCompare = qs('dcmp', 'py');
+  window.dsSet = function (k, v) { setQs(k, v); };
+
+  var METRIC_DEFS = {
+    net:    { label: 'Net sales',     fmt: function (v) { return fmt$(v); },  plain: false },
+    covers: { label: 'Covers',        fmt: function (v) { return fmtNum(v); }, plain: true },
+    checks: { label: 'Checks',        fmt: function (v) { return fmtNum(v); }, plain: true },
+    avg:    { label: 'Average check', fmt: function (v) { return fmt$c(v); }, plain: false }
+  };
+  var MD = METRIC_DEFS[dMetric] || METRIC_DEFS.net;
+
+  function dayValue(uid, iso) {
+    var x = RG.daySales(uid, iso);
+    if (x.closed) return null;
+    /* a channel or daypart cut reads the slice, not the total */
+    if (dChannel) {
+      var g = x.byChannel[dChannel] || 0;
+      if (dMetric === 'net') return g;
+      if (dMetric === 'covers' || dMetric === 'checks') return Math.round(g / Math.max(1, x.avgCheck));
+      return x.avgCheck;
+    }
+    if (dDaypart) {
+      var d2 = x.byDaypart[dDaypart] || 0;
+      if (dMetric === 'net') return d2;
+      if (dMetric === 'covers' || dMetric === 'checks') return Math.round(d2 / Math.max(1, x.avgCheck));
+      return x.avgCheck;
+    }
+    if (dMetric === 'net') return x.net;
+    if (dMetric === 'covers') return x.covers;
+    if (dMetric === 'checks') return x.checks;
+    return x.avgCheck;
+  }
+
+  var dsLabels = [], dsNow = [], dsCmp = [], dsMeta = [];
+  RG.CAL.daysIn(P).forEach(function (d) {
+    if (dDow !== '' && String(d.dow) !== dDow) return;
+    var now = 0, cmp = 0, open = false, n = 0;
+    units.forEach(function (u) {
+      var v = dayValue(u, d.iso);
+      if (v == null) return;
+      open = true; now += v; n++;
+      var pyd = dCompare === 'py' ? RG.CAL.priorYearDay(d.iso) : null;
+      if (pyd) { var pv = dayValue(u, pyd.iso); if (pv != null) cmp += pv; }
+    });
+    if (!open) return;
+    if (dMetric === 'avg' && n) { now = now / n; cmp = cmp / n; }
+    dsLabels.push(RG.CAL.usDate(d.iso).slice(0, 5) + ' ' + d.dowName);
+    dsNow.push(RG.rand.cents(now));
+    dsCmp.push(RG.rand.cents(cmp));
+    dsMeta.push(d);
+  });
+
+  var dsSeries = [{ label: MD.label, data: dsNow, fill: true }];
+  if (dCompare === 'py') dsSeries.push({ label: 'Same days last year', data: dsCmp, dashed: true, color: '#8b93a3' });
+
+  function sel(key, cur, opts, label) {
+    return '<select class="scn-sel' + (cur ? ' on' : '') + '" onchange="dsSet(\'' + key + '\',this.value)">' +
+      opts.map(function (o) {
+        return '<option value="' + o[0] + '"' + (String(cur) === String(o[0]) ? ' selected' : '') + '>' +
+          esc(o[1]) + '</option>';
+      }).join('') + '</select>';
+  }
+
+  var dsControls =
+    sel('dm', dMetric === 'net' ? '' : dMetric, [['net', 'Metric: net sales'], ['covers', 'Metric: covers'],
+      ['checks', 'Metric: checks'], ['avg', 'Metric: average check']]) +
+    sel('dch', dChannel, [['', 'Channel: all']].concat(RG.CHANNELS.map(function (c) {
+      return [c.id, 'Channel: ' + c.label]; }))) +
+    sel('ddp', dDaypart, [['', 'Daypart: all']].concat(RG.CAL.DAYPARTS.map(function (d) {
+      return [d.id, 'Daypart: ' + d.label]; }))) +
+    sel('ddow', dDow, [['', 'Weekday: all']].concat(RG.CAL.DOW.map(function (d, i) {
+      return [String(i), 'Weekday: ' + d]; }))) +
+    sel('dcmp', dCompare === 'py' ? '' : dCompare, [['py', 'Compare: last year'], ['none', 'Compare: off']]);
+
+  var dailyChart = card({
+    title: 'Daily ' + MD.label.toLowerCase(),
+    sub: dsLabels.length + ' trading days' +
+      (dChannel ? ' · ' + esc(RG.CHANNELS.filter(function (c) { return c.id === dChannel; })[0].label) + ' only' : '') +
+      (dDaypart ? ' · ' + esc(RG.CAL.DAYPARTS.filter(function (d) { return d.id === dDaypart; })[0].label) + ' only' : '') +
+      (dDow !== '' ? ' · ' + esc(RG.CAL.DOW[+dDow]) + 's only' : ''),
+    tools: '<div style="display:flex;gap:6px;flex-wrap:wrap">' + dsControls + '</div>',
+    sources: ['Toast', 'Square', 'Deliverect'],
+    body: RGChart.line('c-daily', { labels: dsLabels, series: dsSeries, height: 300,
+      plain: MD.plain }) +
+      '<div class="chart-note">Business day cuts at 4am, so late-night sales roll back to the ' +
+      'prior date. Channel and daypart cuts read the slice, not the total — switching to ' +
+      '<b>Delivery</b> and <b>Late night</b> at once shows only late-night delivery.</div>'
+  });
+
   /* ---- daily series ---- */
   var days = RG.CAL.daysIn(P);
   var daily = days.map(function (d) {
@@ -105,7 +201,7 @@ renderPage('Sales & Traffic', 'Volume, mix and what moved', ['Toast', 'Square', 
   var b = RG.salesBridge(units, prior.key, P);
   var bYoY = py ? RG.salesBridge(units, py.key, P) : null;
 
-  return stats +
+  return stats + dailyChart +
     card({ title: 'Why sales moved', sub: periodLabel(prior.key) + ' → ' + periodLabel(P),
       sources: ['Toast', 'Square'],
       body: waterfall([
