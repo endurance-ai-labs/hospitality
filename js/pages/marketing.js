@@ -125,7 +125,7 @@ renderPage('Marketing & Loyalty', 'Spend, attribution, loyalty cohorts and gift-
             '<div style="font-size:11.5px;color:var(--color-text-muted);margin-top:14px;line-height:1.6">' +
             'Direction requests are the highest-intent free signal a restaurant gets. They move with ' +
             'review rating, which is why this panel sits one click from the ' +
-            '<a href="/hospitality/guest/" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
+            '<a href="/hospitality/guest" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
             'reputation module</a>.</div>';
         })() }) +
     '</div>' +

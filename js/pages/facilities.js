@@ -137,7 +137,7 @@ renderPage('Facilities & Energy', 'Assets, work orders, refrigeration and utilit
           '<div style="font-size:11.5px;color:var(--color-text-muted);margin-top:12px;line-height:1.6">' +
           'Excursions cluster on end-of-life boxes. An unacknowledged alarm over two hours is both a ' +
           'product-loss event and a food-safety exposure — it shows up again on the ' +
-          '<a href="/hospitality/compliance/" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
+          '<a href="/hospitality/compliance" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
           'compliance page</a>.</div>' }) +
     '</div>' +
 

@@ -31,7 +31,7 @@
             '.<br><br>The largest single flag anywhere in the group is <b>' + esc(top.unitName) +
             '</b> — ' + esc(top.title) + ' — worth ' + fmt$(top.impact) + '. ' + esc(top.detail),
           cites: ['Toast', 'Square', 'R365', '7shifts'],
-          link: '/hospitality/cogs/'
+          link: '/hospitality/cogs'
         };
       }
     },
@@ -51,7 +51,7 @@
             '<br><br>These five are exhaustive — they sum to the total movement exactly, ' +
             'because they are the only lines between net sales and four-wall EBITDA.',
           cites: ['Toast', 'R365', '7shifts', 'QBO'],
-          link: '/hospitality/finance/'
+          link: '/hospitality/finance'
         };
       }
     },
@@ -72,7 +72,7 @@
               ? 'This was a <b>traffic</b> story, not a pricing one.'
               : 'This was carried by <b>check average</b>, not by more guests.'),
           cites: ['Toast', 'Square'],
-          link: '/hospitality/sales/'
+          link: '/hospitality/sales'
         };
       }
     },
@@ -101,7 +101,7 @@
               ? 'start with the order guide and contract pricing.'
               : 'start with spec sheets and the line, not the vendor.'),
           cites: ['R365', 'Sysco', 'Toast'],
-          link: '/hospitality/cogs/'
+          link: '/hospitality/cogs'
         };
       }
     },
@@ -128,7 +128,7 @@
           '<br><br>This is the one place where growing sales costs money — worth knowing before ' +
           'you push a promotion at these units.',
           cites: ['Lease', 'Toast'],
-          link: '/hospitality/leases/'
+          link: '/hospitality/leases'
         };
       }
     },
@@ -147,7 +147,7 @@
             'Inside that, overtime moved ' + fmt$(b.otDelta) + ' and California meal-break ' +
             'premiums moved ' + fmt$(b.premiumDelta) + '. Group SPLH is ' + fmt$c(g.splh) + '.',
           cites: ['7shifts', 'ADP', 'Toast'],
-          link: '/hospitality/labor/'
+          link: '/hospitality/labor'
         };
       }
     },
@@ -166,7 +166,7 @@
           'growth and cost control, so a high-margin unit with a widening food variance still ' +
           'falls in the leaderboard.',
           cites: ['Toast', 'Square', 'R365', 'QBO', 'Lease'],
-          link: '/hospitality/finance/'
+          link: '/hospitality/finance'
         };
       }
     },
@@ -187,7 +187,7 @@
             'off-premise item.<br><br>Every point of mix shifted from marketplace to first-party ' +
             'is worth roughly ' + fmt$(delivery * 0.238 * 0.01) + ' a period at current volume.',
           cites: ['Deliverect', 'DoorDash', 'UberEats', 'Toast'],
-          link: '/hospitality/offprem/'
+          link: '/hospitality/offprem'
         };
       }
     }

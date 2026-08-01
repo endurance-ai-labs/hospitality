@@ -106,7 +106,7 @@
           title: 'Theoretical-vs-actual variance ' + fmtPct(cogs.variancePct),
           detail: 'Largest driver: ' + driverLabel(top) + ' at ' + fmt$(cogs.drivers[top]) +
                   ' of ' + fmt$(cogs.variance) + ' total variance.',
-          link: '/hospitality/cogs/?unit=' + uid, sources: ['Toast', 'R365']
+          link: '/hospitality/cogs?unit=' + uid, sources: ['Toast', 'R365']
         });
       }
       var laborDelta = cur.laborPct - prev.laborPct;
@@ -118,7 +118,7 @@
           title: 'Labor up ' + fmtPct(laborDelta) + ' of sales vs. prior period',
           detail: 'Overtime ' + fmt$(cur.otCost) + ', break premiums ' + fmt$(cur.breakPremiums) +
                   ', SPLH ' + fmt$(cur.splh) + '.',
-          link: '/hospitality/labor/?unit=' + uid, sources: ['7shifts', 'Toast']
+          link: '/hospitality/labor?unit=' + uid, sources: ['7shifts', 'Toast']
         });
       }
       if (cur.comps / Math.max(1, cur.grossSales) > 0.014) {
@@ -128,7 +128,7 @@
           title: 'Comps at ' + fmtPct(cur.comps / cur.grossSales) + ' of gross sales',
           detail: 'Group average is ' + fmtPct(M.group[CUR.key].comps / M.group[CUR.key].grossSales) +
                   '. Void count ' + Math.round(cur.grossSales * 0.0005) + '.',
-          link: '/hospitality/cash/?unit=' + uid, sources: [u.pos]
+          link: '/hospitality/cash?unit=' + uid, sources: [u.pos]
         });
       }
       if (u.pctRentBreak) {
@@ -144,7 +144,7 @@
             title: prox > 1 ? 'Percentage rent triggered' : 'Approaching percentage-rent breakpoint',
             detail: 'FY-to-date net sales ' + fmt$(fytd) + ' vs. breakpoint ' + fmt$(u.pctRentBreak) +
                     ' (' + fmtPct(prox) + '). Incremental rate ' + fmtPct(u.pctRentRate) + '.',
-            link: '/hospitality/leases/?unit=' + uid, sources: ['Lease abstract', 'Toast']
+            link: '/hospitality/leases?unit=' + uid, sources: ['Lease abstract', 'Toast']
           });
         }
       }
@@ -160,7 +160,7 @@
             detail: 'Net sales ' + fmt$(cur.netSales) + ' against ' + fmt$(py.netSales) +
                     ' in ' + PRIOR_YEAR.label + '. Covers ' + fmtNum(cur.covers) +
                     ' vs. ' + fmtNum(py.covers) + '.',
-            link: '/hospitality/sales/?unit=' + uid, sources: [u.pos]
+            link: '/hospitality/sales?unit=' + uid, sources: [u.pos]
           });
         }
       }

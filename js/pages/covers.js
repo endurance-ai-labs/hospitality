@@ -107,7 +107,7 @@ renderPage('Reservations & Covers', 'Booking pace, no-shows, turns and seat prod
             '<div style="font-size:11.5px;color:var(--color-text-muted);line-height:1.6">' +
             'An inaccurate quote is the single most reliable producer of a one-star review about ' +
             '“wait time” — and it costs nothing to fix. Cross-referenced on the ' +
-            '<a href="/hospitality/guest/" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
+            '<a href="/hospitality/guest" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
             'Experience &amp; Reputation</a> page.</div>';
         })() }) +
     '</div>' +

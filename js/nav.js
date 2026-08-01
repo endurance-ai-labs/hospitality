@@ -18,49 +18,49 @@ var NAV_GROUPS = [
   {
     id: 'sales', label: 'Sales',
     items: [
-      { href: '/hospitality/sales/',    label: 'Sales & Traffic' },
-      { href: '/hospitality/menu/',     label: 'Menu Engineering' },
-      { href: '/hospitality/covers/',   label: 'Reservations & Covers' },
-      { href: '/hospitality/offprem/',  label: 'Off-Premise Economics' }
+      { href: '/hospitality/sales',    label: 'Sales & Traffic' },
+      { href: '/hospitality/menu',     label: 'Menu Engineering' },
+      { href: '/hospitality/covers',   label: 'Reservations & Covers' },
+      { href: '/hospitality/offprem',  label: 'Off-Premise Economics' }
     ]
   },
   {
     id: 'cost', label: 'Cost', perm: 'margins',
     items: [
-      { href: '/hospitality/cogs/',      label: 'Food & Beverage Cost' },
-      { href: '/hospitality/purchasing/', label: 'Purchasing & Price Watch' },
-      { href: '/hospitality/inventory/', label: 'Inventory & Waste' }
+      { href: '/hospitality/cogs',      label: 'Food & Beverage Cost' },
+      { href: '/hospitality/purchasing', label: 'Purchasing & Price Watch' },
+      { href: '/hospitality/inventory', label: 'Inventory & Waste' }
     ]
   },
   {
     id: 'people', label: 'People',
     items: [
-      { href: '/hospitality/labor/',  label: 'Labor & Scheduling' },
-      { href: '/hospitality/hr/',     label: 'People & HR' }
+      { href: '/hospitality/labor',  label: 'Labor & Scheduling' },
+      { href: '/hospitality/hr',     label: 'People & HR' }
     ]
   },
   {
     id: 'guest', label: 'Guest',
     items: [
-      { href: '/hospitality/guest/',     label: 'Experience & Reputation' },
-      { href: '/hospitality/marketing/', label: 'Marketing & Loyalty' }
+      { href: '/hospitality/guest',     label: 'Experience & Reputation' },
+      { href: '/hospitality/marketing', label: 'Marketing & Loyalty' }
     ]
   },
   {
     id: 'finance', label: 'Financial', perm: 'money',
     items: [
-      { href: '/hospitality/finance/',  label: 'P&L by Unit' },
-      { href: '/hospitality/forecast/', label: 'Forecast & Growth' },
-      { href: '/hospitality/cash/',     label: 'Cash & Loss Prevention' },
-      { href: '/hospitality/leases/',   label: 'Real Estate & Leases' }
+      { href: '/hospitality/finance',  label: 'P&L by Unit' },
+      { href: '/hospitality/forecast', label: 'Forecast & Growth' },
+      { href: '/hospitality/cash',     label: 'Cash & Loss Prevention' },
+      { href: '/hospitality/leases',   label: 'Real Estate & Leases' }
     ]
   },
   {
     id: 'ops', label: 'Operations',
     items: [
-      { href: '/hospitality/facilities/',   label: 'Facilities & Energy' },
-      { href: '/hospitality/compliance/',   label: 'Food Safety & Compliance' },
-      { href: '/hospitality/integrations/', label: 'Integrations & Data Health' }
+      { href: '/hospitality/facilities',   label: 'Facilities & Energy' },
+      { href: '/hospitality/compliance',   label: 'Food Safety & Compliance' },
+      { href: '/hospitality/integrations', label: 'Integrations & Data Health' }
     ]
   }
 ];

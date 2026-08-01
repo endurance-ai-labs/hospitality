@@ -106,7 +106,7 @@ renderPage('People & HR', 'Roster, turnover, hiring and certification currency',
           'A heavy 0–90 day band is the expensive kind of turnover: recruiting cost, training hours, ' +
           'and a period of lower productivity that shows up in the labor line and in service-speed ' +
           'complaints on the ' +
-          '<a href="/hospitality/guest/" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
+          '<a href="/hospitality/guest" style="color:var(--color-blue);font-weight:700;text-decoration:none">' +
           'reputation page</a>.</div>' }) +
       card({ title: 'Certification expiry', sub: 'Food handler and alcohol service currency',
         sources: ['ADP'],
