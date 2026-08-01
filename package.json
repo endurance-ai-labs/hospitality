@@ -6,6 +6,8 @@
   "description": "Brain Powered Operating System - restaurant group edition. Phase 1: deterministic dataset engine.",
   "scripts": {
     "build": "node scripts/build-model.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "stamp": "node scripts/stamp.mjs",
+    "deploy": "npm run build && npm run verify && npm run stamp"
   }
 }
