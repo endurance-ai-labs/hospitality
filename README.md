@@ -202,12 +202,46 @@ ordering and food arriving" links to the shift that produced it, showing that
 day's SPLH, hours and covers. No review platform can make that join, and no
 labor report surfaces it either.
 
+## Live
+
+**https://endurancelabs.ai/hospitality** — password `enduranceportal`
+
+- Repo: `endurance-ai-labs/hospitality` (public), branch `master`
+- Host: GitHub Pages at `endurance-ai-labs.github.io/hospitality`
+- Proxy: reverse-proxy rewrite in `alex-sok/endurance-ai` `next.config.ts`
+  (PR #9, merged) — same clean-proxy pattern as `/law`
+- Local preview: `restaurant-os` in `.claude/launch.json`, port 5245, serves the
+  `.hospitality-serve` junction so `localhost:5245/hospitality/` mirrors prod
+
+### Deploying
+
+```bash
+npm run deploy
+```
+
+Chains build → verify → stamp. Then commit and push `master`; Pages rebuilds in
+about a minute. **Never push without `npm run stamp`** — see the cache note below.
+
+### Two subpath traps this deployment hit
+
+**Routes must be flat `.html` files, not directories.** Next.js strips the
+trailing slash before proxying, so `/hospitality/cogs/` reached Pages as
+`/hospitality/cogs`, Pages canonicalised it with a 301 whose `Location` is its
+OWN absolute origin, and Vercel passed it through — every sub-route bounced the
+visitor from `endurancelabs.ai` to `endurance-ai-labs.github.io`. Each route now
+also exists as `<slug>.html` at the repo root and every internal link drops its
+trailing slash, so Pages answers 200 with no canonicalisation. The landing page
+was never affected, which is why `/law` and `/1100` never surfaced this.
+
+**The cache stamp is content-derived for a reason.** A hand-typed date stamp
+only busts the cache if you remember to bump it. `scripts/stamp.mjs` hashes
+every JS and CSS file and writes that hash into every `?v=`, so it advances
+exactly when the assets change.
+
 ## Next
 
 - Real 1100 Group brand assets (the wordmark is a flagged placeholder)
-- Public `/welcome/` landing page on the Preferred/Y8S pattern
-- Password gate before any client sees it
-- Deploy behind the endurancelabs.ai rewrite
+- Public `/welcome` landing page on the Preferred/Y8S pattern
 
 ### Gotchas
 
