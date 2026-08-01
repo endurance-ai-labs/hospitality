@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" role="img" aria-label="1100 Group">
+  <!-- PLACEHOLDER MARK. The real 1100 Group logo is a Phase 0 discovery
+       deliverable (see restaurant-os-prompt/PHASE-0-DISCOVERY.md, asset 1).
+       Do not present this as their brand identity. -->
+  <rect x="0" y="0" width="120" height="40" rx="6" fill="#151d30"/>
+  <text x="60" y="26" text-anchor="middle" font-family="ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif"
+        font-size="19" font-weight="800" letter-spacing="1.5" fill="#f3f3f5">1100</text>
+</svg>

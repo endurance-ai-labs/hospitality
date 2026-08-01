@@ -1,0 +1,11 @@
+{
+  "name": "restaurant-os",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Brain Powered Operating System - restaurant group edition. Phase 1: deterministic dataset engine.",
+  "scripts": {
+    "build": "node scripts/build-model.mjs",
+    "verify": "node scripts/verify.mjs"
+  }
+}

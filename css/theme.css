@@ -1,0 +1,22 @@
+/* ============================================================
+   CFP Portal — Design System v4.0
+   Dark · Frosted Glass · Celestial-Tech
+
+   Entry point only. Do not add visual rules here.
+   Edit the individual modules instead:
+
+     tokens.css      → all --color-* and design tokens
+     base.css        → reset, body, ambient background gradient
+     layout.css      → topbar, nav, subnav, page shell
+     components.css  → cards (frosted glass), tables, badges, forms
+     utilities.css   → helper classes (.muted, .accent, .red, …)
+
+   All pages link to this one file:
+     <link rel="stylesheet" href="/css/theme.css">
+   ============================================================ */
+
+@import url('tokens.css?v=20260728a');
+@import url('base.css?v=20260728a');
+@import url('layout.css?v=20260728a');
+@import url('components.css?v=20260728a');
+@import url('utilities.css?v=20260728a');

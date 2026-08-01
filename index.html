@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>1100 Group — Operating System</title>
+<meta name="description" content="1100 Group operating system — eight restaurants, four brands, one connected brain. Demo environment, fictional data.">
+<link rel="icon" type="image/svg+xml" href="/hospitality/assets/brand/1100-mark.svg">
+<link rel="stylesheet" href="/hospitality/css/theme.css?v=20260801c">
+<link rel="stylesheet" href="/hospitality/css/demo.css?v=20260801c">
+<link rel="stylesheet" href="/hospitality/css/rg.css?v=20260801c">
+</head>
+<body>
+<script src="/hospitality/js/gate.js?v=20260801c"></script>
+<div id="topbar"></div>
+<main class="page">
+  <div class="demo-wrap" id="app"></div>
+</main>
+
+<script src="/hospitality/js/rand.js?v=20260801c"></script>
+<script src="/hospitality/js/data-calendar.js?v=20260801c"></script>
+<script src="/hospitality/js/data-company.js?v=20260801c"></script>
+<script src="/hospitality/js/data-menu.js?v=20260801c"></script>
+<script src="/hospitality/js/engine-sales.js?v=20260801c"></script>
+<script src="/hospitality/js/engine-labor.js?v=20260801c"></script>
+<script src="/hospitality/js/engine-cogs.js?v=20260801c"></script>
+<script src="/hospitality/js/engine-finance.js?v=20260801c"></script>
+<script src="/hospitality/js/engine-guest.js?v=20260801c"></script>
+<script src="/hospitality/js/engine-ops.js?v=20260801c"></script>
+<script src="/hospitality/js/model.js?v=20260801c"></script>
+<script src="/hospitality/js/model-precomputed.js?v=20260801c"></script>
+<script src="/hospitality/js/util.js?v=20260801c"></script>
+<script src="/hospitality/js/nav.js?v=20260801c"></script>
+<script src="/hospitality/js/page.js?v=20260801c"></script>
+<script src="/hospitality/js/brain.js?v=20260801c"></script>
+<script>
+RGNav.renderTopbar({ subtitle: 'Operating System' });
+
+if (isSignedIn()) {
+  var M   = RG.model();
+  var CUR = M.current, PRI = M.prior, PY = M.priorYear;
+  var g   = M.group[CUR], gp = M.group[PRI], gy = M.group[PY];
+  var me  = currentPersona();
+  var mine = myUnits();
+  var money = can('money');
+  var margins = can('margins');
+
+  var brandColor = { camino: 'var(--rg-camino)', star: 'var(--rg-star)',
+                     catos: 'var(--rg-catos)', bnn: 'var(--rg-bnn)' };
+
+  /* trailing-13 series for the tile sparklines */
+  function series(fn) { return M.trailing13.map(function (k) { return fn(M.group[k]); }); }
+
+  /* ---------- KPI BAND ---------- */
+  function tile(cfg) {
+    return '<div class="kpi-tile">' +
+      '<div class="kpi-label">' + esc(cfg.label) + '</div>' +
+      '<div class="kpi-value">' + traced(cfg.value, cfg.exp) + '</div>' +
+      '<div class="kpi-foot">' + (cfg.chip || '') +
+        (cfg.note ? '<span class="kpi-target">' + esc(cfg.note) + '</span>' : '') +
+        (cfg.spark ? '<span style="margin-left:auto">' + cfg.spark + '</span>' : '') +
+      '</div></div>';
+  }
+
+  var kpis = [
+    tile({
+      label: 'Net sales', value: fmt$(g.netSales),
+      chip: deltaChip(M.kpi.netSalesVsPrior),
+      note: 'vs. prior period',
+      spark: sparkline(series(function (x) { return x.netSales; })),
+      exp: { value: fmt$c(g.netSales),
+        formula: 'Σ (item quantity × menu price) − discounts − comps',
+        inputs: [['Gross sales', fmt$c(g.grossSales)], ['Discounts', '−' + fmt$c(g.discounts)],
+                 ['Comps', '−' + fmt$c(g.comps)], ['Checks', fmtNum(g.checks)]],
+        source: ['Toast', 'Square'], period: periodLabel(CUR) + ' · ' + periodRange(CUR),
+        note: 'Built up from item-level PMIX, not entered as a total.', drill: 'Sales & Traffic' }
+    }),
+    tile({
+      label: 'Comp sales', value: fmtPct(M.kpi.compSales),
+      chip: deltaChip(M.kpi.coversVsPY), note: 'covers vs. LY',
+      exp: { value: fmtPct(M.kpi.compSales),
+        formula: '(net sales this period − same period last year) ÷ same period last year',
+        inputs: [[periodLabel(CUR), fmt$(g.netSales)], [periodLabel(PY), fmt$(gy.netSales)],
+                 ['All 8 units comparable', 'open 13+ periods']],
+        source: ['Toast', 'Square'], period: periodLabel(CUR) + ' vs. ' + periodLabel(PY),
+        note: 'A 13-period calendar means this is four comparable weeks against four comparable weeks.' }
+    }),
+    tile({
+      label: 'Prime cost', value: fmtPct(g.primePct),
+      chip: deltaChip(M.kpi.primeVsPrior, { pp: true, lowerIsBetter: true }),
+      note: 'target ≤ 62.0%',
+      spark: sparkline(series(function (x) { return -x.primePct; })),
+      exp: { value: fmtPct(g.primePct),
+        formula: '(cost of goods + total labor) ÷ net sales',
+        inputs: [['Cost of goods', fmt$(g.cogs) + '  (' + fmtPct(g.cogsPct) + ')'],
+                 ['Total labor', fmt$(g.labor) + '  (' + fmtPct(g.laborPct) + ')'],
+                 ['Net sales', fmt$(g.netSales)]],
+        source: ['R365', '7shifts', 'ADP'], period: periodLabel(CUR),
+        note: 'The number full-service operators actually run the business on.',
+        drill: 'P&L by Unit' }
+    }),
+    tile({
+      label: 'Four-wall EBITDA', value: fmt$(g.fourWall),
+      chip: deltaChip(M.kpi.fourWallVsPrior), note: fmtPct(g.fourWallPct) + ' margin',
+      spark: sparkline(series(function (x) { return x.fourWall; })),
+      exp: { value: fmt$c(g.fourWall),
+        formula: 'net sales − prime cost − controllables − occupancy',
+        inputs: [['Net sales', fmt$(g.netSales)], ['Prime cost', '−' + fmt$(g.primeCost)],
+                 ['Controllables', '−' + fmt$(g.controllables)], ['Occupancy', '−' + fmt$(g.occupancy)]],
+        source: ['QBO', 'R365', 'Lease'], period: periodLabel(CUR),
+        note: 'Before corporate G&A allocation of ' + fmt$(g.ga) + '.', drill: 'P&L by Unit' }
+    }),
+    tile({
+      label: 'Covers', value: fmtNum(g.covers),
+      chip: deltaChip(M.kpi.coversVsPY), note: fmt$c(g.avgCheck) + ' avg check',
+      spark: sparkline(series(function (x) { return x.covers; })),
+      exp: { value: fmtNum(g.covers) + ' covers',
+        formula: 'dine-in net sales ÷ per-person average, by unit',
+        inputs: [['Checks', fmtNum(g.checks)], ['Average check', fmt$c(g.avgCheck)],
+                 ['Open days', '28']],
+        source: ['Toast', 'Square', 'OpenTable'], period: periodLabel(CUR) }
+    })
+  ];
+
+  if (margins) {
+    kpis.push(tile({
+      label: 'Food variance', value: fmt$(g.cogsVariance),
+      chip: deltaChip(g.cogsVariance / g.cogsTheo, { lowerIsBetter: true }),
+      note: 'theoretical vs. actual',
+      exp: { value: fmt$c(g.cogsVariance),
+        formula: 'actual cost of goods − theoretical cost from recipes and PMIX',
+        inputs: [['Portioning', fmt$(g.cogsDrivers.portion)], ['Waste', fmt$(g.cogsDrivers.waste)],
+                 ['Spoilage', fmt$(g.cogsDrivers.spoilage)], ['Purchase price', fmt$(g.cogsDrivers.ppv)],
+                 ['Unexplained shrink', fmt$(g.cogsDrivers.unexplained)]],
+        source: ['R365', 'Sysco', 'Toast'], period: periodLabel(CUR),
+        note: 'The five drivers sum to the variance exactly — nothing is left unattributed.',
+        drill: 'Food & Beverage Cost' }
+    }));
+  }
+
+  /* ---------- SALES BRIDGE ---------- */
+  function bridgeBlock(b) {
+    var rows = [
+      ['Traffic', b.traffic, 'More or fewer checks, valued at the old average check'],
+      ['Menu price', b.price, 'Scheduled price moves that landed inside the window'],
+      ['Mix & behaviour', b.mix, 'What guests actually ordered, net of price']
+    ];
+    var max = Math.max.apply(null, rows.map(function (r) { return Math.abs(r[1]); }).concat([Math.abs(b.total)]));
+    function bar(v, cls) {
+      var w = max ? (Math.abs(v) / max) * 50 : 0;
+      var left = v >= 0 ? 50 : 50 - w;
+      return '<div class="bridge-track"><div class="bridge-zero" style="left:50%"></div>' +
+        '<div class="bridge-fill ' + cls + '" style="left:' + left + '%;width:' + w + '%"></div></div>';
+    }
+    return '<div class="bridge">' +
+      rows.map(function (r) {
+        return '<div class="bridge-row"><div class="bridge-label"' +
+          exp({ value: fmt$c(r[1]), formula: r[2],
+                inputs: [['Checks ' + periodLabel(b.from), fmtNum(b.fromChecks)],
+                         ['Checks ' + periodLabel(b.to), fmtNum(b.toChecks)],
+                         ['Avg check ' + periodLabel(b.from), fmt$c(b.fromAvgCheck)],
+                         ['Avg check ' + periodLabel(b.to), fmt$c(b.toAvgCheck)]],
+                source: ['Toast', 'Square'], period: periodLabel(b.from) + ' → ' + periodLabel(b.to) }) +
+          ' style="cursor:help">' + esc(r[0]) + '</div>' +
+          bar(r[1], r[1] >= 0 ? 'pos' : 'neg') +
+          '<div class="bridge-amt">' + (r[1] >= 0 ? '+' : '') + fmt$(r[1]) + '</div></div>';
+      }).join('') +
+      '<div class="bridge-row total"><div class="bridge-label">Total change</div>' +
+      bar(b.total, 'tot') +
+      '<div class="bridge-amt">' + (b.total >= 0 ? '+' : '') + fmt$(b.total) + '</div></div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--color-slate-hint);margin-top:11px;line-height:1.55">' +
+      'The three drivers sum to ' + fmt$(b.total) + ' exactly. Traffic is valued at the prior ' +
+      'average check, so the parts never double-count.' +
+      (b.price === 0 ? ' <b>No scheduled menu price move landed in this window</b>, so the whole ' +
+        'check effect is mix and guest behaviour.' : '') + '</div>';
+  }
+
+  /* ---------- LEADERBOARD ---------- */
+  var board = M.scorecard.filter(function (s) { return mine.indexOf(s.unit) >= 0; });
+  var lbRows = board.map(function (s, i) {
+    var u = RG.unitById[s.unit];
+    var rankCls = s.rank === 1 ? 'top' : (s.rank === M.scorecard.length ? 'bottom' : '');
+    return '<tr>' +
+      '<td><span class="rank-badge ' + rankCls + '">' + s.rank + '</span></td>' +
+      '<td class="unit-cell"><span class="brand-dot" style="background:' + brandColor[s.brand] + '"></span>' +
+        '<b>' + esc(s.name) + '</b><span>' + esc(u.city) + ', ' + esc(u.state) + ' · ' + esc(u.pos) + '</span></td>' +
+      '<td class="num">' + traced(fmt$(s.netSales), {
+          value: fmt$c(s.netSales), formula: 'Σ item quantity × menu price − discounts − comps',
+          inputs: [['Covers', fmtNum(s.covers)], ['Average check', fmt$c(s.avgCheck)],
+                   ['Sales per seat', fmt$(s.salesPerSeat)]],
+          source: [u.pos], period: periodLabel(CUR), drill: s.name }) + '</td>' +
+      '<td class="num">' + deltaChip(s.compPct) + '</td>' +
+      '<td class="num">' + fmtNum(s.covers) + '</td>' +
+      (margins ? '<td class="num">' + traced(fmtPct(s.cogsPct), {
+          value: fmtPct(s.cogsPct), formula: 'actual cost of goods ÷ net sales',
+          inputs: [['Theoretical vs. actual variance', fmt$(s.cogsVariance)]],
+          source: ['R365'], period: periodLabel(CUR), drill: 'Food & Beverage Cost' }) + '</td>' : '') +
+      (margins ? '<td class="num">' + fmtPct(s.laborPct) + '</td>' : '') +
+      (margins ? '<td class="num"><b>' + fmtPct(s.primePct) + '</b></td>' : '') +
+      (money ? '<td class="num">' + traced(fmt$(s.fourWall), {
+          value: fmt$c(s.fourWall), formula: 'net sales − prime cost − controllables − occupancy',
+          inputs: [['Margin', fmtPct(s.fourWallPct)], ['Occupancy', fmtPct(s.occupancyPct) + ' of sales'],
+                   ['TTM four-wall', fmt$(s.ttmFourWall)]],
+          source: ['QBO', 'Lease'], period: periodLabel(CUR), drill: 'P&L by Unit' }) + '</td>' : '') +
+      (money ? '<td class="num">' + fmtPct(s.fourWallPct) + '</td>' : '') +
+      '</tr>';
+  }).join('');
+
+  /* ---------- TRIAGE ---------- */
+  var flags = M.flags.filter(function (f) { return mine.indexOf(f.unit) >= 0; });
+  var triage = flags.length ? flags.map(function (f) {
+    return '<a class="triage-item ' + f.severity + '" href="' + f.link + '">' +
+      '<span class="triage-bar"></span>' +
+      '<div><div class="triage-head">' +
+        '<span class="triage-title">' + esc(f.title) + '</span>' +
+        pill(f.unitName, f.severity === 'high' ? 'bad' : f.severity === 'med' ? 'warn' : 'info') +
+      '</div>' +
+      '<div class="triage-detail">' + esc(f.detail) + '</div>' +
+      '<div class="triage-meta"><span style="font-size:10.5px;color:var(--color-slate-hint)">' +
+        esc(f.module) + '</span>' + srcChips.apply(null, f.sources) + '</div></div>' +
+      '<div class="triage-impact"><b>' + fmt$(f.impact) + '</b><span>impact</span></div></a>';
+  }).join('') : '<div style="padding:24px;text-align:center;color:var(--color-text-muted);font-size:13px">' +
+      'Nothing above threshold in your units this period.</div>';
+
+  /* ---------- PERIOD CLOSE CHAIN ---------- */
+  var closeChain = approvalChain('close-' + CUR, [
+    { person: 'gm-grand', label: 'Unit counts submitted', doneLabel: 'Unit counts submitted',
+      nudge: 'Inventory counts for all units are needed before cost of goods can be locked.' },
+    { person: 'rvillalobos', label: 'Recipe & waste review', doneLabel: 'Recipe and waste review complete',
+      nudge: 'Theoretical-vs-actual variance needs a culinary sign-off before close.' },
+    { person: 'dnakamura', label: 'Controller review & GL post', doneLabel: 'Posted to the general ledger',
+      nudge: 'Period close is waiting on the GL post.' },
+    { person: 'sorr', label: 'Executive sign-off', doneLabel: 'Period closed',
+      nudge: 'Final sign-off closes the period.' }
+  ]);
+
+  /* ---------- RENDER ---------- */
+  app.innerHTML =
+    '<div class="section-head">' +
+      '<div><h1 style="font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0">Executive Command Center</h1>' +
+      '<div class="sub">' + esc(periodLabel(CUR)) + ' · ' + esc(periodRange(CUR)) + ' · ' +
+      board.length + ' of ' + RG.UNITS.length + ' restaurants in your scope · signed in as ' +
+      esc(me.name) + '</div></div>' +
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+      srcChips('Toast', 'Square', '7shifts', 'R365', 'QBO') + '</div>' +
+    '</div>' +
+
+    '<div class="kpi-band">' + kpis.join('') + '</div>' +
+
+    '<div class="demo-panel">' +
+      '<div class="section-head"><div><h2>Needs attention</h2>' +
+      '<div class="sub">Ranked by dollar impact across every module. ' + flags.length + ' open.</div></div>' +
+      pill('live triage', 'info') + '</div>' +
+      '<div class="triage card-gutter">' + triage + '</div>' +
+    '</div>' +
+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start" class="rg-two">' +
+      '<div class="demo-panel">' +
+        '<div class="section-head"><div><h2>Why sales moved</h2>' +
+        '<div class="sub">' + esc(periodLabel(PRI)) + ' → ' + esc(periodLabel(CUR)) + '</div></div>' +
+        srcChips('Toast', 'Square') + '</div>' +
+        '<div class="card-gutter">' + bridgeBlock(M.bridges.sales) + '</div>' +
+      '</div>' +
+      '<div class="demo-panel">' +
+        '<div class="section-head"><div><h2>Period close</h2>' +
+        '<div class="sub">' + esc(periodLabel(CUR)) + ' · four-step chain, role-locked</div></div>' +
+        srcChips('R365', 'QBO') + '</div>' +
+        '<div class="card-gutter">' + closeChain + '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="demo-panel">' +
+      '<div class="section-head"><div><h2>Unit leaderboard</h2>' +
+      '<div class="sub">Composite score weighs four-wall margin, comp growth and cost control. ' +
+      'Hover any number for its derivation.</div></div>' +
+      gridTools('lb', 'Unit leaderboard ' + CUR) + '</div>' +
+      '<div class="demo-tbl-wrap grid-scroll card-gutter"><table class="demo-tbl" id="lb">' +
+        '<thead><tr><th>#</th><th>Restaurant</th><th class="num">Net sales</th>' +
+        '<th class="num">Comp</th><th class="num">Covers</th>' +
+        (margins ? '<th class="num">COGS</th><th class="num">Labor</th><th class="num">Prime</th>' : '') +
+        (money ? '<th class="num">Four-wall</th><th class="num">Margin</th>' : '') +
+        '</tr></thead><tbody>' + lbRows + '</tbody>' +
+        '<tfoot><tr><td></td><td><b>Group</b></td>' +
+          '<td class="num"><b>' + fmt$(g.netSales) + '</b></td>' +
+          '<td class="num">' + deltaChip(M.kpi.compSales) + '</td>' +
+          '<td class="num"><b>' + fmtNum(g.covers) + '</b></td>' +
+          (margins ? '<td class="num"><b>' + fmtPct(g.cogsPct) + '</b></td>' +
+            '<td class="num"><b>' + fmtPct(g.laborPct) + '</b></td>' +
+            '<td class="num"><b>' + fmtPct(g.primePct) + '</b></td>' : '') +
+          (money ? '<td class="num"><b>' + fmt$(g.fourWall) + '</b></td>' +
+            '<td class="num"><b>' + fmtPct(g.fourWallPct) + '</b></td>' : '') +
+        '</tr></tfoot></table></div>' +
+    '</div>' +
+
+    '<div style="font-size:11px;color:var(--color-slate-hint);text-align:center;padding:20px 0 8px;line-height:1.6">' +
+      'Demo environment. Restaurant names, brands, cities and leadership are real and public; ' +
+      'every operating figure on this page is fictional.<br>' +
+      'Built by Endurance AI Labs · dataset verified by ' +
+      '<code style="font-size:10.5px">npm run verify</code> — 201 tie-out checks.' +
+    '</div>';
+}
+</script>
+<style>
+@media (max-width: 980px) { .rg-two { grid-template-columns: 1fr !important; } }
+</style>
+</body>
+</html>
