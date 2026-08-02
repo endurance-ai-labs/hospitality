@@ -46,8 +46,48 @@
 
   function push(id, factory) { queue.push({ id: id, factory: factory }); }
 
+  /* Charts must not be built until the container actually has a width.
+     Building in the same tick as the innerHTML assignment can measure 0 —
+     and once Chart.js has cached a zero width it has no reason to
+     re-measure, so the canvas paints nothing at full size. Defer to a
+     frame, retry while the container is collapsed, and keep a
+     ResizeObserver on each one so a later layout change re-fits it. */
   function flush() {
     if (!global.Chart) { queue = []; return; }
+    var pending = queue.slice();
+    queue = [];
+    var tries = 0;
+    (function attempt() {
+      var ready = pending.filter(function (q) {
+        var el = document.getElementById(q.id);
+        return el && el.parentElement && el.parentElement.offsetWidth > 0;
+      });
+      if (!ready.length && tries < 20 && pending.length) {
+        tries++;
+        /* setTimeout, NOT requestAnimationFrame: rAF is paused in a
+           background or non-compositing tab, so an rAF retry loop would
+           never build the chart at all. */
+        return setTimeout(attempt, 30);
+      }
+      build(pending);
+      /* Belt and braces: a ResizeObserver only fires when the box actually
+         CHANGES. If a chart was built at zero width and the container then
+         simply is its final size, nothing ever fires — so sweep once. */
+      if (!global.__rgSafetyNet) {
+        global.__rgSafetyNet = true;
+        setTimeout(function () {
+          Array.prototype.slice.call(document.querySelectorAll('canvas')).forEach(function (el) {
+            if (!el.parentElement || el.parentElement.offsetWidth <= 0) return;
+            if (el._rgChart) {
+              if (el.offsetWidth === 0) { try { el._rgChart.resize(); } catch (e) {} }
+            } else if (el._rgFactory) { rebuild(el); }
+          });
+        }, 300);
+      }
+    })();
+  }
+
+  function build(pending) {
     Chart.defaults.font.family = getComputedStyle(document.body).fontFamily ||
       'ui-sans-serif, system-ui, sans-serif';
     Chart.defaults.font.size = 11;
@@ -55,14 +95,52 @@
     Chart.defaults.animation = { duration: 420, easing: 'easeOutQuart' };
     Chart.defaults.datasets.bar.maxBarThickness = 46;
 
-    queue.forEach(function (q) {
+    pending.forEach(function (q) {
       var el = document.getElementById(q.id);
       if (!el) return;
       if (el._rgChart) el._rgChart.destroy();
-      try { el._rgChart = new Chart(el.getContext('2d'), q.factory()); }
-      catch (e) { /* a broken chart must never take the page down */ }
+      /* Chart.js registers the canvas at the start of construction. If the
+         constructor then throws — which it does when the canvas has zero
+         width — the canvas stays registered while _rgChart is never set,
+         and every retry after that dies with "canvas is already in use".
+         Always clear the registry entry first, and remember failures so a
+         later resize can recover instead of silently rendering nothing. */
+      var prior = (global.Chart.getChart && Chart.getChart(el)) || el._rgChart;
+      if (prior) { try { prior.destroy(); } catch (e) {} }
+      el._rgChart = null;
+      try {
+        el._rgChart = new Chart(el.getContext('2d'), q.factory());
+        el._rgFactory = q.factory;
+        observe(el);
+      } catch (e) {
+        el._rgFactory = q.factory;      /* retry when it has a size */
+        el._rgFailed = true;
+        observe(el);
+      }
     });
-    queue = [];
+  }
+
+  function rebuild(el) {
+    var prior = (global.Chart.getChart && Chart.getChart(el)) || null;
+    if (prior) { try { prior.destroy(); } catch (e) {} }
+    try {
+      el._rgChart = new Chart(el.getContext('2d'), el._rgFactory());
+      el._rgFailed = false;
+    } catch (e) {}
+  }
+
+  /* re-fit when the container changes size — theme toggles, sidebar
+     collapse, orientation change, or a late font load */
+  function observe(el) {
+    if (el._rgObs || typeof ResizeObserver === 'undefined') return;
+    var box = el.parentElement;
+    if (!box) return;
+    el._rgObs = new ResizeObserver(function () {
+      if (box.offsetWidth <= 0) return;
+      if (el._rgChart) { try { el._rgChart.resize(); } catch (e) {} return; }
+      if (el._rgFactory) rebuild(el);
+    });
+    el._rgObs.observe(box);
   }
 
   /* ---- shared scaffolding ---- */

@@ -202,6 +202,18 @@ function scopedUnits() {
   return RG.UNITS.filter(function (u) { return mine.indexOf(u.id) >= 0; });
 }
 
+/* Resolve a chain step to whoever actually holds that role in THIS client.
+   Hard-coding person ids breaks the moment the portal is forked — the
+   step renders "Unassigned" and the approve button never appears. */
+function personByRole(role, unitId) {
+  var pool = RG.PEOPLE.filter(function (p) {
+    if (p.role !== role) return false;
+    if (!unitId) return true;
+    return RG.unitsFor(p.id).indexOf(unitId) >= 0;
+  });
+  return pool.length ? pool[0].id : (RG.PEOPLE[0] ? RG.PEOPLE[0].id : null);
+}
+
 function roleSummary(p) {
   var perms = RG.ROLES[p.role].perms;
   if (perms.indexOf('admin') >= 0) return 'Full access · all units · sign-off rights';

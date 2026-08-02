@@ -204,6 +204,133 @@
     ], height: 260
   });
 
+  /* ================= TRADING TODAY =================
+     The Today board, folded into the home page so the first thing on
+     screen is what is happening right now, not last closed period. */
+  var TODAY_ISO = RG.CAL.END;
+  var NOW_H = 19.67;
+  var todayDay = RG.CAL.byIso[TODAY_ISO];
+  var lastWeekDay = RG.CAL.DAYS[todayDay.i - 7];
+
+  function hourlyOf(uid, iso) {
+    var s = RG.daySales(uid, iso);
+    var by = {};
+    for (var h = 8; h < 26; h++) by[h] = 0;
+    if (s.closed) return { by: by, closed: true, total: 0 };
+    RG.CAL.DAYPARTS.forEach(function (dp) {
+      var v = s.byDaypart[dp.id] || 0;
+      var n = Math.max(1, dp.to - dp.from);
+      for (var h = dp.from; h < dp.to; h++) by[h] = RG.rand.cents((by[h] || 0) + v / n);
+    });
+    return { by: by, closed: false, total: s.net };
+  }
+  function soFarOf(uid, iso, upto) {
+    var t = hourlyOf(uid, iso);
+    if (t.closed) return { v: 0, closed: true, full: 0 };
+    var acc = 0;
+    for (var x = 8; x < Math.floor(upto); x++) acc += t.by[x] || 0;
+    acc += (t.by[Math.floor(upto)] || 0) * (upto % 1);
+    return { v: RG.rand.cents(acc), closed: false, full: t.total };
+  }
+
+  var todayBoard = units.map(function (u) {
+    var t = soFarOf(u, TODAY_ISO, NOW_H);
+    var lw = lastWeekDay ? soFarOf(u, lastWeekDay.iso, NOW_H) : null;
+    var ds = RG.daySales(u, TODAY_ISO);
+    var dl = RG.dayLabor(u, TODAY_ISO);
+    var on = (dl.shifts || []).filter(function (sh) { return sh.start <= NOW_H && sh.end > NOW_H; });
+    var pctDay = t.full ? t.v / t.full : 0;
+    return {
+      u: u, unit: RG.unitById[u], soFar: t.v, closed: t.closed, projected: t.full,
+      pctDay: pctDay, covers: Math.round(ds.covers * pctDay), onClock: on.length,
+      vsLW: lw && lw.v ? (t.v - lw.v) / lw.v : null
+    };
+  }).sort(function (a, b) { return b.soFar - a.soFar; });
+
+  var tGroup = todayBoard.reduce(function (a, b) { return RG.rand.cents(a + b.soFar); }, 0);
+  var tProj = todayBoard.reduce(function (a, b) { return RG.rand.cents(a + b.projected); }, 0);
+  var tCovers = todayBoard.reduce(function (a, b) { return a + b.covers; }, 0);
+  var tOnClock = todayBoard.reduce(function (a, b) { return a + b.onClock; }, 0);
+  var tOpen = todayBoard.filter(function (b) { return !b.closed; }).length;
+  var tLW = units.reduce(function (a, u) {
+    return RG.rand.cents(a + (lastWeekDay ? soFarOf(u, lastWeekDay.iso, NOW_H).v : 0)); }, 0);
+
+  var todayCards = todayBoard.map(function (b) {
+    return '<div class="td-card' + (b.closed ? ' closed' : '') + '">' +
+      '<div class="td-head"><span class="brand-dot" style="background:' +
+        (BRAND_COLOR[b.unit.brand] || 'var(--color-blue)') + '"></span>' +
+        '<b>' + esc(b.unit.short) + '</b>' +
+        (b.closed ? pill('closed', 'neutral') : pill('open', 'good')) + '</div>' +
+      '<div class="td-val">' + traced(fmt$(b.soFar), {
+        value: fmt$c(b.soFar) + ' so far today',
+        formula: 'sales recorded between open and ' + RGSched.hourLabel(NOW_H),
+        inputs: [['Projected full day', fmt$(b.projected)],
+                 ['Day complete', fmtPct(b.pctDay)],
+                 ['Covers so far', fmtNum(b.covers)],
+                 ['On the clock now', fmtNum(b.onClock) + ' people']],
+        source: [b.unit.pos], period: usDate(TODAY_ISO) + ' · ' + todayDay.dowName,
+        note: 'Business day cuts at 4am; late-night sales roll back to this date.',
+        drill: 'Today' }) + '</div>' +
+      '<div class="td-meta">' + (b.vsLW == null ? '' : deltaChip(b.vsLW)) +
+        '<span class="kpi-sub">vs. last ' + todayDay.dowName + '</span></div>' +
+      '<div class="td-bar"><i style="width:' + Math.min(100, b.pctDay * 100).toFixed(0) + '%"></i></div>' +
+      '<div class="td-foot"><span>' + fmtPct(b.pctDay) + ' of day</span>' +
+        '<span>' + fmtNum(b.covers) + ' covers</span>' +
+        '<span>' + fmtNum(b.onClock) + ' on shift</span></div>' +
+      '</div>';
+  }).join('');
+
+  var todayHours = [], todayCum = [], todayCumLW = [];
+  var accN = 0, accW = 0;
+  for (var th = 10; th < 26; th++) {
+    var n = 0, w = 0;
+    units.forEach(function (u) {
+      var a = hourlyOf(u, TODAY_ISO); if (!a.closed) n += a.by[th] || 0;
+      if (lastWeekDay) { var c = hourlyOf(u, lastWeekDay.iso); if (!c.closed) w += c.by[th] || 0; }
+    });
+    accN += n; accW += w;
+    todayHours.push(RGSched.hourLabel(th));
+    todayCum.push(th <= NOW_H ? RG.rand.cents(accN) : null);
+    todayCumLW.push(RG.rand.cents(accW));
+  }
+  var todayCurve = RGChart.line('c-today', {
+    labels: todayHours, height: 250,
+    series: [
+      { label: 'Today, so far', data: todayCum, fill: true },
+      { label: 'Same day last week', data: todayCumLW, dashed: true, color: '#8b93a3' }
+    ]
+  });
+
+  var todaySection =
+    '<div class="td-live">' +
+      '<span class="td-dot"></span>' +
+      '<b>' + esc(todayDay.dowName) + ' ' + usDate(TODAY_ISO) + '</b>' +
+      '<span>trading as at ' + RGSched.hourLabel(NOW_H) + '</span>' +
+      '<span class="scn-spacer"></span>' +
+      '<span>' + tOpen + ' of ' + units.length + ' open · ' + fmtNum(tOnClock) +
+      ' on shift · ' + fmt$(tGroup) + ' so far' +
+      (tLW ? ' · ' + fmtPct((tGroup - tLW) / tLW) + ' vs. last ' + todayDay.dowName : '') +
+      '</span>' +
+      '<a href="/hospitality/today" style="font-size:11.5px;font-weight:700;color:var(--color-blue);' +
+      'text-decoration:none">Open Today →</a>' +
+    '</div>' +
+    '<div class="chart-grid-2" style="align-items:stretch">' +
+      card({ title: 'Trading today', sub: 'Sales so far by restaurant, against the projected full day',
+        sources: ['Toast', '7shifts'],
+        body: '<div class="stat-row" style="margin-bottom:14px">' +
+          [['Group so far', fmt$(tGroup), fmtPct(tGroup / (tProj || 1)) + ' of the day'],
+           ['Projected day', fmt$(tProj), ''],
+           ['Covers', fmtNum(tCovers), fmt$c(tCovers ? tGroup / tCovers : 0) + ' per cover'],
+           ['On shift now', fmtNum(tOnClock), 'across ' + tOpen + ' open']
+          ].map(function (r) {
+            return '<div class="stat"><span>' + esc(r[0]) + '</span><b>' + r[1] + '</b><i>' +
+              esc(r[2]) + '</i></div>'; }).join('') + '</div>' +
+          '<div class="td-grid" style="margin-bottom:0">' + todayCards + '</div>' }) +
+      card({ title: 'Cumulative today', sub: 'Against the same day last week. The line stops at ' +
+        RGSched.hourLabel(NOW_H) + ' because the rest of the day has not happened.',
+        sources: ['Toast'], body: todayCurve }) +
+    '</div>';
+
   /* ---- triage ---- */
   var flags = M.flags.filter(function (f) { return units.indexOf(f.unit) >= 0; });
   var triage = flags.length ? flags.map(function (f) {
@@ -245,13 +372,17 @@
   }).join('');
 
   var closeChain = approvalChain('close-' + CUR, [
-    { person: 'gm-grand', label: 'Unit counts submitted', doneLabel: 'Unit counts submitted',
+    { person: personByRole('gm', units[0]), label: 'Unit counts submitted',
+      doneLabel: 'Unit counts submitted',
       nudge: 'Inventory counts are needed before cost of goods can be locked.' },
-    { person: 'rvillalobos', label: 'Recipe & waste review', doneLabel: 'Recipe and waste review complete',
+    { person: personByRole('chef'), label: 'Recipe & waste review',
+      doneLabel: 'Recipe and waste review complete',
       nudge: 'Theoretical-vs-actual variance needs a culinary sign-off.' },
-    { person: 'dnakamura', label: 'Controller review & GL post', doneLabel: 'Posted to the general ledger',
+    { person: personByRole('finance'), label: 'Controller review & GL post',
+      doneLabel: 'Posted to the general ledger',
       nudge: 'Period close is waiting on the GL post.' },
-    { person: 'sorr', label: 'Executive sign-off', doneLabel: 'Period closed',
+    { person: personByRole('exec') || personByRole('principal'), label: 'Executive sign-off',
+      doneLabel: 'Period closed',
       nudge: 'Final sign-off closes the period.' }
   ]);
 
@@ -265,6 +396,7 @@
     '</div>' +
     RGScope.render() +
     '<div class="kpi-band">' + kpis.join('') + '</div>' +
+    todaySection +
 
     card({ title: 'Needs attention',
       sub: 'Ranked by severity then dollar impact across every module. ' + flags.length + ' open.',
