@@ -52,7 +52,8 @@
       'ui-sans-serif, system-ui, sans-serif';
     Chart.defaults.font.size = 11;
     Chart.defaults.color = ink('muted');
-    Chart.defaults.animation = { duration: 380 };
+    Chart.defaults.animation = { duration: 420, easing: 'easeOutQuart' };
+    Chart.defaults.datasets.bar.maxBarThickness = 46;
 
     queue.forEach(function (q) {
       var el = document.getElementById(q.id);
@@ -105,7 +106,8 @@
         stacked: !!o.stacked
       },
       y: {
-        grid: { color: ink('grid'), drawBorder: false },
+        grace: '6%',
+        grid: { color: ink('grid'), drawBorder: false, lineWidth: 1, tickBorderDash: [3, 4] },
         border: { display: false },
         ticks: { color: ink('muted'), padding: 6,
                  callback: o.pct ? function (v) { return (v * 100).toFixed(0) + '%'; }
@@ -129,10 +131,16 @@
               label: s.label, data: s.data,
               borderColor: s.color || series(i),
               backgroundColor: s.fill
-                ? (function () {
+                ? function (ctx) {
+                    /* a vertical gradient reads as depth without adding ink */
+                    var a = ctx.chart.chartArea;
+                    if (!a) return 'transparent';
                     var c = s.color || series(i);
-                    return c + '1f';
-                  })()
+                    var g = ctx.chart.ctx.createLinearGradient(0, a.top, 0, a.bottom);
+                    g.addColorStop(0, c + '38');
+                    g.addColorStop(1, c + '03');
+                    return g;
+                  }
                 : 'transparent',
               fill: !!s.fill,
               borderWidth: 2,
@@ -162,11 +170,41 @@
     return canvas(id, cfg.height);
   }
 
+  /* Direct labels on bar ends. Selective by design: only when a single
+     series is plotted and the set is small enough to stay legible. */
+  var valueLabels = {
+    id: 'rgValueLabels',
+    afterDatasetsDraw: function (chart, args, opts) {
+      if (!opts || !opts.on) return;
+      var ctx = chart.ctx;
+      ctx.save();
+      ctx.font = '600 10px ' + Chart.defaults.font.family;
+      ctx.fillStyle = opts.color;
+      chart.data.datasets.forEach(function (ds, di) {
+        var meta = chart.getDatasetMeta(di);
+        if (meta.hidden) return;
+        meta.data.forEach(function (el, i) {
+          var v = ds.data[i];
+          if (v == null) return;
+          if (opts.horizontal) {
+            ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+            ctx.fillText(opts.fmt(v), el.x + 7, el.y);
+          } else {
+            ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+            ctx.fillText(opts.fmt(v), el.x, el.y - 5);
+          }
+        });
+      });
+      ctx.restore();
+    }
+  };
+
   /* ---- bar: magnitude across categories. 4px rounded data-end. ---- */
   function bar(id, cfg) {
     push(id, function () {
       return {
         type: 'bar',
+        plugins: [valueLabels],
         data: {
           labels: cfg.labels,
           datasets: cfg.series.map(function (s, i) {
@@ -198,6 +236,15 @@
           });
           o.indexAxis = cfg.horizontal ? 'y' : 'x';
           o.interaction = { mode: cfg.stacked ? 'index' : 'nearest', intersect: !cfg.stacked };
+          o.plugins.rgValueLabels = {
+            on: cfg.series.length === 1 && !cfg.stacked && cfg.labels.length <= 14,
+            horizontal: !!cfg.horizontal, color: ink('muted'),
+            fmt: cfg.pct ? function (v) { return (v * 100).toFixed(1) + '%'; }
+               : cfg.plain ? function (v) { return Math.round(v).toLocaleString('en-US'); }
+               : money
+          };
+          if (cfg.horizontal) o.layout = { padding: { right: 54 } };
+          else o.layout = { padding: { top: 16 } };
           return o;
         })()
       };

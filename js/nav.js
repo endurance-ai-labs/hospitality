@@ -15,7 +15,14 @@ var BASE = '/hospitality';
 
 var NAV_GROUPS = [
   { id: 'home', label: 'Home', href: '/hospitality/', items: [] },
-  { id: 'explore', label: 'Explorer', href: '/hospitality/explore', items: [] },
+  { id: 'today', label: 'Today', href: '/hospitality/today', items: [] },
+  {
+    id: 'analyze', label: 'Analyze',
+    items: [
+      { href: '/hospitality/explore', label: 'KPI Explorer' },
+      { href: '/hospitality/analyze', label: 'Cross-Analysis' }
+    ]
+  },
   {
     id: 'sales', label: 'Sales',
     items: [
@@ -77,7 +84,8 @@ function _norm(p) {
 function _activeGroup(path) {
   path = _norm(path);
   if (path === '/') return 'home';
-  if (path.indexOf('/explore') === 0) return 'explore';
+  if (path.indexOf('/today') === 0) return 'today';
+  if (path.indexOf('/explore') === 0 || path.indexOf('/analyze') === 0) return 'analyze';
   for (var i = 0; i < NAV_GROUPS.length; i++) {
     var g = NAV_GROUPS[i];
     for (var j = 0; j < g.items.length; j++) {

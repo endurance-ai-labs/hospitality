@@ -255,6 +255,23 @@ const ALL = M.units;
   console.log(`  [13] Guest engine joins ops       3 checks`);
 }
 
+
+/* ---- 14. the ingredient roll-up ties to the P&L theoretical ----
+   The cross-analysis page aggregates cost by ingredient; the P&L states a
+   theoretical total. They are two derivations of the same recipe lines and
+   must agree, or the pivot quietly disagrees with the statement. */
+{
+  let ing = 0, theo = 0;
+  for (const uid of ALL) {
+    const c = RG.periodCogs(uid, CUR);
+    theo += c.theo;
+    for (const k of Object.keys(c.byIng)) ing += c.byIng[k].cost;
+  }
+  eq('ingredient roll-up = P&L theoretical cost', ing, theo, 1.0);
+  ok('ingredient roll-up is non-trivial', ing > 100000, `got ${Math.round(ing)}`);
+  console.log(`  [14] Ingredient roll-up ties      2 checks`);
+}
+
 /* ---- summary ---- */
 console.log('');
 if (fail) {

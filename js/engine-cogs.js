@@ -24,23 +24,24 @@
     pm.rows.forEach(function (r) {
       var m = RG.menuById[r.item];
       var packaged = (r.channel === 'delivery' || r.channel === 'takeout');
-      var lineCost = R.cents(RG.plateCost(r.item, iso, packaged) * r.qty);
-      if (m.bev) out.bev = R.cents(out.bev + lineCost);
-      else out.food = R.cents(out.food + lineCost);
+      var lineCost = RG.plateCost(r.item, iso, packaged) * r.qty;
+      if (m.bev) out.bev += lineCost; else out.food += lineCost;
       var scale = m.bev ? RG.PORTION_SCALE.bev : RG.PORTION_SCALE.food;
       m.recipe.forEach(function (l) {
         var q = l.qty * r.qty * scale;
         var a = out.byIng[l.ing] || (out.byIng[l.ing] = { qty: 0, cost: 0 });
-        a.qty = Math.round((a.qty + q) * 1000) / 1000;
-        a.cost = R.cents(a.cost + RG.ingCost(l.ing, iso) * q);
+        /* accumulate raw and round ONCE at the period roll-up — rounding
+           every ingredient every day drifts against the P&L theoretical */
+        a.qty += q;
+        a.cost += RG.ingCost(l.ing, iso) * q;
       });
       if (packaged && !m.bev) {
         var t = out.byIng.togo || (out.byIng.togo = { qty: 0, cost: 0 });
-        t.qty = Math.round((t.qty + 1.4 * r.qty) * 1000) / 1000;
-        t.cost = R.cents(t.cost + RG.ingCost('togo', iso) * 1.4 * r.qty);
+        t.qty += 1.4 * r.qty;
+        t.cost += RG.ingCost('togo', iso) * 1.4 * r.qty;
       }
     });
-    out.total = R.cents(out.food + out.bev);
+    out.total = out.food + out.bev;
     return out;
   });
   RG.dayTheo = dayTheo;
@@ -70,14 +71,19 @@
     var theoFood = 0, theoBev = 0, byIng = {};
     days.forEach(function (d) {
       var t = dayTheo(unitId, d.iso);
-      theoFood = R.cents(theoFood + t.food);
-      theoBev = R.cents(theoBev + t.bev);
+      theoFood += t.food;
+      theoBev += t.bev;
       Object.keys(t.byIng).forEach(function (k) {
         var a = byIng[k] || (byIng[k] = { qty: 0, cost: 0 });
-        a.qty = Math.round((a.qty + t.byIng[k].qty) * 1000) / 1000;
-        a.cost = R.cents(a.cost + t.byIng[k].cost);
+        a.qty += t.byIng[k].qty;
+        a.cost += t.byIng[k].cost;
       });
     });
+    Object.keys(byIng).forEach(function (k) {
+      byIng[k].qty = Math.round(byIng[k].qty * 1000) / 1000;
+      byIng[k].cost = R.cents(byIng[k].cost);
+    });
+    theoFood = R.cents(theoFood); theoBev = R.cents(theoBev);
     var theo = R.cents(theoFood + theoBev);
     var rates = driverRates(unitId, periodKey);
     var drivers = {

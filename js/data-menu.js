@@ -314,6 +314,9 @@
       c += RG.ingCost(m.recipe[i].ing, isoDate) * m.recipe[i].qty * scale;
     }
     if (packaged && !m.bev) c += RG.ingCost('togo', isoDate) * 1.4;
-    return R.cents(c);
+    /* Deliberately NOT rounded. Rounding per plate and then multiplying by
+       quantity drifts against the ingredient-level roll-up, which sums the
+       same recipe lines raw. Callers round at their own aggregation. */
+    return c;
   };
 })(typeof window !== 'undefined' ? window : globalThis);
