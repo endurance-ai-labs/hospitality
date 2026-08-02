@@ -1,0 +1,55 @@
+/* ============================================================
+   CFP Portal — Utilities
+   Single-purpose helper classes. No layout, no components here.
+   ============================================================ */
+
+/* ---- Text ---- */
+.muted  { color: var(--color-text-muted); }
+.faint  { color: var(--color-slate-hint); }
+.mono   { font-family: var(--font-mono); }
+.serif  { font-family: var(--font-serif); }
+.dek    { font-size: 13px; color: var(--color-text-muted); line-height: 1.6; }
+.kind   { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--color-slate-hint); }
+.dot    { color: var(--color-slate-hint); margin: 0 4px; }
+.accent { color: var(--color-blue-light); }
+.accent-navy { color: var(--color-blue-light); } /* legacy alias */
+
+/* ---- Status colors ---- */
+.red   { color: var(--color-red); }
+.amber { color: var(--color-amber); }
+.green { color: var(--color-green); }
+
+.bg-red   { background: var(--color-red-bg);   color: var(--color-red); }
+.bg-amber { background: var(--color-amber-bg); color: var(--color-amber); }
+.bg-green { background: var(--color-green-bg); color: var(--color-green); }
+
+/* ---- Empty state ---- */
+.empty {
+  padding: var(--space-12);
+  text-align: center;
+  color: var(--color-slate-hint);
+  font-size: 13.5px;
+}
+
+/* ---- Map legend ---- */
+.map-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: var(--color-text-muted);
+  padding: var(--space-2) 0;
+}
+.map-legend-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+/* ---- Display helpers ---- */
+.nowrap  { white-space: nowrap; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }

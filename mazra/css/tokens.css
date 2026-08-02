@@ -1,0 +1,209 @@
+/* ============================================================
+   CFP Portal — Design Tokens
+   Single source of truth for every color, size, and spacing value.
+   Import this first. Never put visual rules here — only variables.
+   ============================================================ */
+
+:root {
+  /* ---- Brand palette — Margins design system ----
+     charcoal rail / cool off-white / Margins blue #2766d6, muted statuses.
+     Variable NAMES are kept ("blue" = primary accent) so no page breaks. */
+  --color-navy:        #223051;   /* rail-2 — dark-blue table-header band */
+  --color-navy-deep:   #151d30;   /* rail — deep navy */
+  --color-blue:        #2766d6;   /* Margins primary blue */
+  --color-blue-light:  #5B8DEF;   /* blue accent text on charcoal */
+  --color-blue-pale:   rgba(39, 102, 214, 0.14);
+
+  /* ---- Accent ---- */
+  --color-deep-violet: #b1503f;   /* muted clay — secondary accent */
+  --color-violet-pale: rgba(177, 80, 63, 0.12);
+
+  /* ---- Dark surfaces — dark-gray body, dark-blue chrome/cards ---- */
+  --color-bg:    #15181f;   /* page background — dark gray (cool) */
+  --color-bg-2:  #1a2131;   /* card / panel surface — dark blue */
+  --color-bg-3:  #232c40;   /* elevated: inputs, rows — navy-gray */
+
+  /* ---- Frosted glass surface ---- */
+  --glass-bg:         rgba(255, 255, 255, 0.04);
+  --glass-bg-hover:   rgba(255, 255, 255, 0.065);
+  --glass-border:     rgba(255, 255, 255, 0.08);
+  --glass-border-top: rgba(255, 255, 255, 0.14);  /* edge highlight */
+  --glass-blur:       blur(20px) saturate(160%);
+
+  /* ---- Text ---- */
+  --color-cloud-whisper: #f3f3f5;  /* primary text — rail ink */
+  --color-text-muted:    #a2a2ac;  /* rail muted */
+  --color-slate-hint:    #7c7c87;  /* rail label */
+
+  /* ---- Borders ---- */
+  --color-border:      rgba(255, 255, 255, 0.08);
+  --color-border-soft: rgba(255, 255, 255, 0.04);
+
+  /* ---- Status — use sparingly ---- */
+  --color-green:    #6FA57E;  --color-green-bg:  rgba(111, 165, 126, 0.14);
+  --color-amber:    #C99245;  --color-amber-bg:  rgba(201, 146, 69,  0.14);
+  --color-red:      #C96B57;  --color-red-bg:    rgba(201, 107, 87,  0.14);
+
+  /* ---- Endurance cosmic accents ---- */
+  --color-steel-accent: #2b3552;
+  --gradient-cosmic-a:  radial-gradient(circle closest-corner at 10% 50%, rgba(39,102,214,0.50), rgba(0,0,0,0) 55%);
+  --gradient-cosmic-b:  linear-gradient(90deg, #1b3e63, #245489 50%, #2766d6);
+
+  /* ---- Typography — Endurance system ---- */
+  --font-sans:  'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  /* Margins master: numerals render in the same Inter/system stack as body copy
+     (tabular figures via font-variant-numeric where set). Mono retired 2026-07-26. */
+  --font-mono:  'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-serif: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; /* Margins: display = bold sans */
+
+  --text-caption:    10px;
+  --text-body-sm:    12px;
+  --text-body:       14px;
+  --text-sub:        18px;
+  --text-heading-sm: 24px;
+  --text-heading:    32px;
+  --text-heading-lg: 40px;
+  --text-display:    50px;
+
+  /* ---- Spacing (semantic) ---- */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- Layout ---- */
+  --page-max-width: 1600px;
+  --card-padding:   24px;
+
+  /* ---- Shadows ---- */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.12);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.10);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.30), 0 2px 6px rgba(0,0,0,0.12);
+
+  /* ---- Border radius ---- */
+  --radius-sm:   8px;   /* Margins radius-sm */
+  --radius-md:   10px;
+  --radius-lg:   12px;  /* Margins radius */
+  --radius-full: 999px; /* pills, avatars                    */
+
+  /* ---- Layout surface tokens (used by layout.css; override per theme) ---- */
+  --topbar-bg:              rgba(21,27,40,0.85);
+  --topbar-border:          rgba(255,255,255,0.06);
+  --ticker-bg:              #0e1420;
+  --ticker-text:            var(--color-blue-light);
+  --ticker-label-color:     rgba(255,255,255,0.45);
+  --ticker-sep-color:       rgba(255,255,255,0.12);
+  --ticker-change-color:    var(--color-cloud-whisper);
+  --subnav-bg:              rgba(21,27,40,0.90);
+  --subnav-border:          var(--color-border);
+  --nav-item-color:         rgba(255,255,255,0.42);
+  --nav-item-hover-bg:      rgba(255,255,255,0.06);
+  --nav-item-hover-color:   rgba(255,255,255,0.85);
+  --nav-icon-color:         rgba(255,255,255,0.38);
+  --nav-icon-hover-bg:      rgba(255,255,255,0.08);
+  --nav-icon-hover-color:   rgba(255,255,255,0.80);
+  --nav-dropdown-bg:        rgba(24,30,46,0.97);
+  --nav-dropdown-border:    rgba(255,255,255,0.09);
+  --nav-dropdown-shadow:    0 8px 32px rgba(0,0,0,0.55);
+  --nav-dropdown-text:      rgba(255,255,255,0.70);
+  --nav-dropdown-hover-bg:  rgba(255,255,255,0.07);
+  --nav-dropdown-divider:   rgba(255,255,255,0.07);
+  --nav-mobile-bg:          #15181f;
+  --nav-mobile-border:      rgba(255,255,255,0.07);
+  --nav-mobile-item-color:  rgba(255,255,255,0.70);
+  --nav-mobile-item-border: rgba(255,255,255,0.05);
+  --nav-mobile-dd-bg:       rgba(0,0,0,0.18);
+  --nav-mobile-dd-text:     rgba(91,141,239,0.9);
+  --nav-toggle-bg:          rgba(21,27,40,0.92);
+  --nav-scrim-bg:           rgba(0,0,0,0.65);
+  --marquee-bg:             var(--color-bg);
+  --marquee-item-color:     rgba(255,255,255,0.50);
+  --topbar-meta-color:      rgba(255,255,255,0.38);
+  --topbar-meta-b-color:    rgba(255,255,255,0.65);
+}
+
+/* ============================================================
+   Light theme overrides — applied when html[data-theme="light"]
+   ============================================================ */
+[data-theme="light"] {
+  /* Surfaces — metallic light-gray "sister" of Margins (institutional) */
+  --color-bg:    #e4e7ec;   /* brushed silver ground (gloss added in endurance.css) */
+  --color-bg-2:  #ffffff;   /* cards float white above the metal */
+  --color-bg-3:  #eaedf2;   /* elevated rows / inputs — cool silver */
+
+  /* Frosted glass — lighter, white-tinted */
+  --glass-bg:         rgba(255,255,255,0.62);
+  --glass-bg-hover:   rgba(255,255,255,0.82);
+  --glass-border:     rgba(27,34,48,0.09);
+  --glass-border-top: rgba(255,255,255,0.85);
+
+  /* Text — ink on bone */
+  --color-cloud-whisper: #1b2230;  /* ink */
+  --color-text-muted:    #5b6472;
+  --color-slate-hint:    #97a0ad;
+
+  /* Borders */
+  --color-border:      rgba(27,34,48,0.11);
+  --color-border-soft: rgba(27,34,48,0.05);
+
+  /* Brass darkens on light surfaces for contrast */
+  --color-blue:       #2766d6;
+  --color-blue-light: #1f54b8;
+  --color-blue-pale:  #eaf2fd;
+
+  /* Shadows — lighter for light bg */
+  --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.09), 0 1px 3px rgba(0,0,0,0.05);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+
+  /* Layout surfaces */
+  --topbar-bg:              rgba(247,248,250,0.94);
+  --topbar-border:          rgba(27,34,48,0.09);
+  --ticker-bg:              #1b1b20;  /* Margins rail strip */
+  --ticker-text:            #5B8DEF;  /* strip stays dark — light blue */
+  --ticker-label-color:     rgba(255,255,255,0.55);
+  --ticker-sep-color:       rgba(255,255,255,0.18);
+  --ticker-change-color:    rgba(255,255,255,0.90);
+  --subnav-bg:              rgba(247,248,250,0.96);
+  --subnav-border:          rgba(27,34,48,0.09);
+  --nav-item-color:         rgba(27,34,48,0.50);
+  --nav-item-hover-bg:      rgba(27,34,48,0.05);
+  --nav-item-hover-color:   rgba(27,34,48,0.88);
+  --nav-icon-color:         rgba(27,34,48,0.40);
+  --nav-icon-hover-bg:      rgba(27,34,48,0.07);
+  --nav-icon-hover-color:   rgba(27,34,48,0.80);
+  --nav-dropdown-bg:        rgba(255,255,255,0.98);
+  --nav-dropdown-border:    rgba(27,34,48,0.12);
+  --nav-dropdown-shadow:    0 8px 32px rgba(0,0,0,0.14);
+  --nav-dropdown-text:      rgba(27,34,48,0.72);
+  --nav-dropdown-hover-bg:  rgba(27,34,48,0.05);
+  --nav-dropdown-divider:   rgba(27,34,48,0.08);
+  --nav-mobile-bg:          #f7f8fa;
+  --nav-mobile-border:      rgba(27,34,48,0.09);
+  --nav-mobile-item-color:  rgba(27,34,48,0.72);
+  --nav-mobile-item-border: rgba(27,34,48,0.07);
+  --nav-mobile-dd-bg:       rgba(27,34,48,0.04);
+  --nav-mobile-dd-text:     #1f54b8;
+  --nav-toggle-bg:          rgba(247,248,250,0.96);
+  --nav-scrim-bg:           rgba(27,34,48,0.45);
+  --marquee-bg:             var(--color-bg);
+  --marquee-item-color:     rgba(27,34,48,0.55);
+  --topbar-meta-color:      rgba(27,34,48,0.38);
+  --topbar-meta-b-color:    rgba(27,34,48,0.65);
+}
+
+
+/* Margins muted status colors in light mode */
+[data-theme="light"] {
+  --color-green: #4f7d5d;  --color-green-bg: #eaf2ec;
+  --color-amber: #b98a36;  --color-amber-bg: #f6efde;
+  --color-red:   #b1503f;  --color-red-bg:   #f7e9e5;
+}
