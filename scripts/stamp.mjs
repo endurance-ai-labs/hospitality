@@ -29,12 +29,18 @@ for (const f of assets) {
 }
 const stamp = h.digest('hex').slice(0, 10);
 
+/* Fork landing pages (mazra.html) are COPIES of the fork's own index and
+   carry the fork's asset hash. Stamping them here would overwrite that
+   with the parent's hash and leave the fork pointing at stale assets. */
+const FORKS = ['mazra'];
 const htmls = fs.readdirSync(ROOT)
-  .filter((f) => f.endsWith('.html'))
+  .filter((f) => f.endsWith('.html') && !FORKS.includes(f.replace('.html', '')))
   .map((f) => path.join(ROOT, f))
   .concat(
     fs.readdirSync(ROOT, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !['node_modules', '.git', 'scripts', 'css', 'js', 'assets', 'vendor'].includes(e.name))
+      .filter((e) => e.isDirectory() &&
+        !['node_modules', '.git', 'scripts', 'css', 'js', 'assets', 'vendor'].includes(e.name) &&
+        !FORKS.includes(e.name))
       .map((e) => path.join(ROOT, e.name, 'index.html'))
       .filter((p) => fs.existsSync(p))
   );

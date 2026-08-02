@@ -46,5 +46,17 @@ for (const f of htmls) {
   if (after !== before) { fs.writeFileSync(f, after); changed++; }
 }
 
+/* /hospitality/mazra resolves to the FLAT mazra.html at the PARENT repo
+   root, not to mazra/index.html — Next strips the trailing slash before
+   proxying, and GitHub Pages then serves the flat file. The two must stay
+   in lockstep or the branded URL serves a landing page pointing at a
+   stale asset hash, which looks exactly like a broken deploy. */
+const landing = path.join(ROOT, '..', 'mazra.html');
+const home = path.join(ROOT, 'index.html');
+if (fs.existsSync(home)) {
+  fs.writeFileSync(landing, fs.readFileSync(home, 'utf8'));
+  console.log('\n  Landing copy refreshed: ../mazra.html');
+}
+
 console.log(`\n  Cache stamp: v=${stamp}`);
 console.log(`  ${assets.length} assets hashed · ${changed} of ${htmls.length} HTML files updated\n`);
