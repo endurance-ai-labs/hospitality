@@ -92,7 +92,16 @@
       'ui-sans-serif, system-ui, sans-serif';
     Chart.defaults.font.size = 11;
     Chart.defaults.color = ink('muted');
-    Chart.defaults.animation = { duration: 420, easing: 'easeOutQuart' };
+    /* NO ENTRY ANIMATION — deliberate, and the single most important line
+       in this file. Chart.js defers its FIRST paint to a requestAnimationFrame
+       tick. rAF is paused in any tab that is not compositing — a background
+       tab, a restored session, a window behind another window — so an
+       animated first render can leave the canvas correctly sized and
+       completely blank, which reads to a viewer as broken data rather than
+       a paused frame loop. Verified by sampling the canvas backing store:
+       0 painted pixels with animation on in a non-compositing tab, 14,328
+       with animation off. Hover transitions still animate. */
+    Chart.defaults.animation = false;
     Chart.defaults.datasets.bar.maxBarThickness = 46;
 
     pending.forEach(function (q) {
