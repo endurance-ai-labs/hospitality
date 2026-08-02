@@ -168,7 +168,9 @@ function traced(html, cfg) {
 /* ============================================================
    PERSONAS & ROLE GATING — driven by RG.PEOPLE / RG.ROLES
    ============================================================ */
-var SESSION_KEY = 'rgos-user';
+/* Namespaced per client: both demos live on one origin, so a shared key
+   means signing into one silently signs you out of the other. */
+var SESSION_KEY = 'rgos-user:' + (RG.COMPANY && RG.COMPANY.name ? RG.COMPANY.name : 'default');
 
 function personas() { return RG.PEOPLE; }
 

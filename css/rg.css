@@ -840,3 +840,108 @@ table.demo-tbl.pv-tbl tbody td.pv-share { color: var(--color-slate-hint); font-s
 table.demo-tbl.pv-tbl tbody tr.pv-other td { font-style: italic; opacity: .8; }
 table.demo-tbl.pv-tbl tbody td.pv-cell { transition: none; }
 table.demo-tbl.pv-tbl tbody tr:hover td.pv-cell { outline: 1px solid rgba(39,102,214,.35); outline-offset: -1px; }
+
+/* ============================================================
+   INSTITUTIONAL PASS
+   Tighter rhythm, a report-grade masthead, denser numeric tables,
+   and cards that read as exhibits rather than widgets.
+   ============================================================ */
+
+/* ---- page masthead ---- */
+.rg-masthead {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 20px;
+  flex-wrap: wrap; padding: 4px 0 16px; margin-bottom: 16px;
+  border-bottom: 2px solid var(--rg-ink);
+}
+[data-theme="dark"] .rg-masthead { border-bottom-color: rgba(255,255,255,.22); }
+.rg-eyebrow {
+  font-size: 9.5px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--color-blue); margin-bottom: 6px;
+}
+.rg-masthead h1 {
+  font-size: 27px; font-weight: 800; letter-spacing: -.03em; margin: 0; line-height: 1.05;
+}
+.rg-masthead .sub { font-size: 12px; color: var(--color-slate-hint); margin-top: 6px; }
+.rg-stamp {
+  text-align: right; font-size: 10.5px; color: var(--color-slate-hint); line-height: 1.7;
+}
+.rg-stamp b { display: block; font-size: 12px; color: inherit; font-weight: 700; }
+
+/* ---- exhibit cards ---- */
+.demo-panel {
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(21,29,48,.04), 0 6px 18px rgba(21,29,48,.05);
+}
+[data-theme="light"] .demo-panel { background: #fff; border-color: rgba(21,29,48,.09); }
+.demo-panel > .section-head {
+  padding-bottom: 12px; margin-bottom: 16px;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+.section-head h2 {
+  font-size: 15px; font-weight: 800; letter-spacing: -.01em;
+}
+.section-head .sub { font-size: 11.5px; line-height: 1.5; max-width: 74ch; }
+
+/* exhibit numbering — reads like a report, not a dashboard */
+.demo-panel { counter-increment: rgex; }
+.demo-wrap { counter-reset: rgex; }
+.demo-panel > .section-head h2::before {
+  content: counter(rgex, decimal-leading-zero);
+  font-size: 9.5px; font-weight: 800; letter-spacing: .1em;
+  color: var(--color-blue); background: var(--color-blue-pale);
+  border-radius: 4px; padding: 3px 6px; margin-right: 9px; vertical-align: 2px;
+}
+
+/* ---- denser, more numeric tables ---- */
+table.demo-tbl { font-size: 11.5px; }
+table.demo-tbl thead th {
+  font-size: 9px !important; letter-spacing: .1em;
+  padding: 9px 10px !important;
+}
+table.demo-tbl tbody td { padding: 8px 10px !important; font-variant-numeric: tabular-nums; }
+table.demo-tbl tbody tr:nth-child(even) td { background: rgba(21,29,48,.017); }
+[data-theme="dark"] table.demo-tbl tbody tr:nth-child(even) td { background: rgba(255,255,255,.016); }
+table.demo-tbl tbody tr:hover td { background: var(--color-blue-pale) !important; }
+table.demo-tbl td.num, table.demo-tbl th.num { text-align: right !important; }
+
+/* ---- KPI band: sharper, quieter, more certain ---- */
+.kpi-tile { border-radius: 10px; }
+.kpi-tile::before { height: 2px; }
+.kpi-label { letter-spacing: .14em; font-size: 9px; }
+.kpi-value { font-size: 29px; letter-spacing: -.035em; }
+.kpi-band { gap: 12px; }
+
+/* ---- item x day matrix ---- */
+.idm-wrap { max-height: 620px; }
+table.demo-tbl.idm thead th.idm-dh {
+  min-width: 46px; font-size: 8.5px !important; line-height: 1.25; padding: 6px 5px !important;
+}
+table.demo-tbl.idm thead th.idm-dh span {
+  display: block; opacity: .6; font-size: 8px; letter-spacing: .08em;
+}
+table.demo-tbl.idm tbody td.idm-cell { padding: 5px 6px !important; font-size: 10.5px; }
+table.demo-tbl.idm tbody td.idm-item { text-align: left; min-width: 190px; position: sticky; left: 0;
+  background: var(--color-bg-2); z-index: 2; }
+[data-theme="light"] table.demo-tbl.idm tbody td.idm-item { background: #fff; }
+table.demo-tbl.idm tbody tr:nth-child(even) td.idm-item { background: #f7f8fa; }
+[data-theme="dark"] table.demo-tbl.idm tbody tr:nth-child(even) td.idm-item { background: #1d2434; }
+table.demo-tbl.idm tbody td.idm-item b { font-size: 11.5px; display: block; }
+table.demo-tbl.idm tbody td.idm-item span { font-size: 9.5px; color: var(--color-slate-hint); }
+table.demo-tbl.idm td.idm-tot { border-left: 2px solid var(--color-border); }
+table.demo-tbl.idm td.idm-share { color: var(--color-slate-hint); font-size: 10px; }
+table.demo-tbl.idm thead th:first-child { position: sticky; left: 0; z-index: 3; }
+
+/* ---- signal band on the home page ---- */
+.rg-signals {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  gap: 1px; background: var(--color-border); border: 1px solid var(--color-border);
+  border-radius: 10px; overflow: hidden; margin-bottom: var(--space-4);
+}
+.rg-sig { background: var(--color-bg-2); padding: 13px 16px; }
+[data-theme="light"] .rg-sig { background: #fff; }
+.rg-sig-k {
+  font-size: 9px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--color-slate-hint); margin-bottom: 5px;
+}
+.rg-sig-v { font-size: 15px; font-weight: 700; letter-spacing: -.015em; line-height: 1.3; }
+.rg-sig-n { font-size: 10.5px; color: var(--color-text-muted); margin-top: 3px; line-height: 1.45; }

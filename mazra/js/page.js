@@ -74,11 +74,12 @@
   function pageHead(title, sub, sources) {
     var scope = activeUnit() ? RG.unitById[activeUnit()].name
       : myUnits().length + ' restaurants';
-    return '<div class="section-head">' +
-      '<div><h1 style="font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0">' +
-      esc(title) + '</h1><div class="sub">' + esc(sub) + ' · ' + esc(scope) + ' · ' +
-      esc(periodLabel(activePeriod())) + ' (' + esc(periodRange(activePeriod())) + ')</div></div>' +
-      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+    return '<div class="rg-masthead">' +
+      '<div><div class="rg-eyebrow">' + esc(RG.COMPANY.name) + ' · Operating System</div>' +
+      '<h1>' + esc(title) + '</h1>' +
+      '<div class="sub">' + esc(sub) + ' · ' + esc(scope) + '</div></div>' +
+      '<div class="rg-stamp"><b>' + esc(periodLabel(activePeriod())) + '</b>' +
+      esc(periodRange(activePeriod())) + '<br>' +
       (sources ? srcChips.apply(null, sources) : '') + '</div></div>' +
       (global.RGScope ? RGScope.render() : '');
   }

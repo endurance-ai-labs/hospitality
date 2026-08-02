@@ -345,6 +345,33 @@
   }).join('') : '<div style="padding:24px;text-align:center;color:var(--color-text-muted);font-size:13px">' +
       'Nothing above threshold in this scope.</div>';
 
+  var flagsForSignals = flags;
+  /* ---- signal band: the four sentences an operator needs first ---- */
+  var sigSales = M.kpi && M.kpi.compSales != null ? M.kpi.compSales : null;
+  var worstFlag = flagsForSignals[0];
+  var bestUnit = M.scorecard.filter(function (s) { return units.indexOf(s.unit) >= 0; })[0];
+  var primeGap = g.primePct - 0.62;
+  var signalBand = '<div class="rg-signals">' +
+    [['Headline', fmt$(g.netSales) + ' net sales',
+      (basis ? basisLabel + ' · ' : '') +
+      (compareValue(function (x) { return x.netSales; })
+        ? fmtPct((g.netSales - compareValue(function (x) { return x.netSales; })) /
+            Math.abs(compareValue(function (x) { return x.netSales; }))) + ' movement'
+        : 'no comparison selected')],
+     ['Prime cost', fmtPct(g.primePct),
+      (primeGap > 0 ? fmtPct(primeGap) + ' above the 62.0% target — '
+        + fmt$(primeGap * g.netSales) + ' of margin'
+        : fmtPct(-primeGap) + ' inside the 62.0% target')],
+     ['Biggest single issue', worstFlag ? worstFlag.unitName : 'None above threshold',
+      worstFlag ? worstFlag.title + ' · ' + fmt$(worstFlag.impact) : 'Nothing is flagged this period'],
+     ['Strongest restaurant', bestUnit ? bestUnit.short : '—',
+      bestUnit ? fmtPct(bestUnit.fourWallPct) + ' four-wall margin on ' + fmt$(bestUnit.netSales) : '']
+    ].map(function (r) {
+      return '<div class="rg-sig"><div class="rg-sig-k">' + esc(r[0]) + '</div>' +
+        '<div class="rg-sig-v">' + r[1] + '</div>' +
+        '<div class="rg-sig-n">' + esc(r[2]) + '</div></div>';
+    }).join('') + '</div>';
+
   /* ---- leaderboard ---- */
   var lbRows = M.scorecard.filter(function (s) { return units.indexOf(s.unit) >= 0; })
     .map(function (s) {
@@ -387,14 +414,16 @@
   ]);
 
   document.getElementById('app').innerHTML =
-    '<div class="section-head">' +
-      '<div><h1 style="font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0">Executive Command Center</h1>' +
-      '<div class="sub">' + esc(periodLabel(CUR)) + ' · ' + esc(periodRange(CUR)) + ' · ' +
-      units.length + ' of ' + RG.UNITS.length + ' restaurants · signed in as ' + esc(me.name) + '</div></div>' +
-      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-      srcChips('Toast', 'Square', '7shifts', 'R365', 'QBO') + '</div>' +
+    '<div class="rg-masthead">' +
+      '<div><div class="rg-eyebrow">' + esc(RG.COMPANY.name) + ' · Period Operating Report</div>' +
+      '<h1>Executive Command Center</h1>' +
+      '<div class="sub">' + units.length + ' of ' + RG.UNITS.length +
+      ' restaurants in scope · prepared for ' + esc(me.name) + ', ' + esc(me.title) + '</div></div>' +
+      '<div class="rg-stamp"><b>' + esc(periodLabel(CUR)) + '</b>' + esc(periodRange(CUR)) +
+      '<br>' + srcChips('Toast', 'R365', '7shifts', 'QBO') + '</div>' +
     '</div>' +
     RGScope.render() +
+    signalBand +
     '<div class="kpi-band">' + kpis.join('') + '</div>' +
     todaySection +
 

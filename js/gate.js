@@ -8,10 +8,11 @@
    hands. Anything genuinely sensitive must never live in this repo.
    ============================================================ */
 (function () {
-  var KEY = 'rgos_unlocked';
   /* SHA-256 of the demo password */
   var HASH = 'ac90f728eed6e93794b7c08e9b4bdb92f43b1442d9dac792443c07983ca221de';
   var BASE = '/hospitality';
+  /* namespaced so unlocking one demo does not unlock the other */
+  var KEY = 'rgos_unlocked' + BASE.replace(/\//g, '_');
 
   try { if (sessionStorage.getItem(KEY) === '1') return; } catch (e) { return; }
 

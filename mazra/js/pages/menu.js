@@ -116,6 +116,67 @@ renderPage('Menu Engineering', 'Item mix, true plate cost and contribution', ['T
       '<td class="num">' + fmt$(c.margin) + '</td></tr>';
   }).join('');
 
+  /* ================= ITEM x DAY =================
+     The lowest grain the business records. Every other number on the
+     site is an aggregation of these rows. */
+  var idMeasure = qs('idm', 'qty');
+  var idChannel = qs('idc', '');
+  var idDaypart = qs('idd', '');
+  var idCategory = qs('idcat', '');
+  var idTop = parseInt(qs('idn', '30'), 10) || 30;
+  window.idSet = function (k, v) { setQs(k, v); };
+
+  var idCats = [];
+  RG.menuFor(RG.unitById[units[0]].brand).forEach(function (m) {
+    if (idCats.indexOf(m.category) < 0) idCats.push(m.category);
+  });
+
+  function idSel(k, cur, opts, on) {
+    return '<select class="scn-sel' + (on ? ' on' : '') + '" onchange="idSet(\'' + k + '\',this.value)">' +
+      opts.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' +
+          (String(cur) === String(o[0]) ? ' selected' : '') + '>' + esc(o[1]) + '</option>';
+      }).join('') + '</select>';
+  }
+
+  var idExhibit = RGItemDay.render({
+    units: units, period: P, id: 'idm', measure: idMeasure,
+    channel: idChannel, daypart: idDaypart, category: idCategory, topN: idTop
+  });
+
+  var idControls =
+    idSel('idm', idMeasure, Object.keys(RGItemDay.MEASURES)
+      .filter(function (k) {
+        var m = RGItemDay.MEASURES[k]; return !m.perm || can(m.perm);
+      })
+      .map(function (k) { return [k, 'Measure: ' + RGItemDay.MEASURES[k].label]; }), true) +
+    idSel('idcat', idCategory, [['', 'Category: all']].concat(idCats.map(function (c) {
+      return [c, 'Category: ' + c]; })), !!idCategory) +
+    idSel('idc', idChannel, [['', 'Channel: all']].concat(RG.CHANNELS.map(function (c) {
+      return [c.id, 'Channel: ' + c.label]; })), !!idChannel) +
+    idSel('idd', idDaypart, [['', 'Daypart: all']].concat(RG.CAL.DAYPARTS.map(function (d) {
+      return [d.id, 'Daypart: ' + d.label]; })), !!idDaypart) +
+    idSel('idn', String(idTop), [['15', 'Top 15 items'], ['30', 'Top 30 items'],
+      ['60', 'Top 60 items'], ['500', 'Every item']]);
+
+  var itemDayCard = card({
+    title: 'Item sales by day',
+    sub: idExhibit.measureLabel + ' for every item on every trading day' +
+      (idCategory ? ' · ' + esc(idCategory) : '') +
+      (idChannel ? ' · ' + esc(RG.CHANNELS.filter(function (c) { return c.id === idChannel; })[0].label) : '') +
+      (idDaypart ? ' · ' + esc(RG.CAL.DAYPARTS.filter(function (d) { return d.id === idDaypart; })[0].label) : '') +
+      ' · ' + fmtNum(idExhibit.data.items.length) + ' items × ' +
+      fmtNum(idExhibit.data.days.length) + ' days',
+    tools: '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">' +
+      idControls + '</div>',
+    sources: ['Toast', 'R365'],
+    body: idExhibit.html +
+      '<div class="chart-note">Cell shading is share of the largest cell. Hover any figure for ' +
+      'its share of that item’s period and of that day. This is the grain the POS actually ' +
+      'records — the P&amp;L, the menu matrix and the food-cost bridge are all sums of these ' +
+      'same rows.</div>'
+  });
+
   return '<div class="stat-row">' +
     [['Items on menu', fmtNum(items.length), 'in scope'],
      ['Units sold', fmtNum(totQty), 'this period'],
@@ -150,5 +211,6 @@ renderPage('Menu Engineering', 'Item mix, true plate cost and contribution', ['T
           '<td class="num"><b>' + fmtNum(totQty) + '</b></td><td></td><td></td><td></td>' +
           '<td class="num"><b>' + fmtPct((totSales - totMargin) / (totSales || 1)) + '</b></td>' +
           '<td class="num"><b>' + fmt$c(avgMargin) + '</b></td>' +
-          '<td class="num"><b>' + fmt$(totMargin) + '</b></td><td></td></tr>' }) });
+          '<td class="num"><b>' + fmt$(totMargin) + '</b></td><td></td></tr>' }) }) +
+    itemDayCard;
 });
