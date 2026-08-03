@@ -22,12 +22,12 @@
 
   /* ---------- dimensions ---------- */
   var DIMS = {
-    unit:     { label: 'Restaurant', domains: ['sales', 'cost', 'labor', 'finance'],
+    unit:     { label: 'Restaurant', domains: ['sales', 'cost', 'labor', 'finance', 'offprem'],
                 of: function (f) { return RG.unitById[f.unit].name; },
                 sort: function (a, b) { return a.localeCompare(b); } },
-    brand:    { label: 'Brand', domains: ['sales', 'cost', 'labor', 'finance'],
+    brand:    { label: 'Brand', domains: ['sales', 'cost', 'labor', 'finance', 'offprem'],
                 of: function (f) { return RG.BRANDS.filter(function (b) { return b.id === RG.unitById[f.unit].brand; })[0].name; } },
-    region:   { label: 'Region', domains: ['sales', 'cost', 'labor', 'finance'],
+    region:   { label: 'Region', domains: ['sales', 'cost', 'labor', 'finance', 'offprem'],
                 of: function (f) { return RG.unitById[f.unit].region; } },
     state:    { label: 'State', domains: ['sales', 'cost', 'labor', 'finance'],
                 of: function (f) { return RG.unitById[f.unit].state; } },
@@ -43,12 +43,16 @@
     employee: { label: 'Employee', domains: ['labor'], of: function (f) { return f.empName; } },
     jobcode:  { label: 'Job code', domains: ['labor'], of: function (f) { return f.jobLabel; } },
     section:  { label: 'Section', domains: ['labor'], of: function (f) { return f.boh ? 'Back of house' : 'Front of house'; } },
-    dow:      { label: 'Day of week', domains: ['sales', 'labor'], of: function (f) { return f.dowName; },
+    dow:      { label: 'Day of week', domains: ['sales', 'labor', 'offprem'], of: function (f) { return f.dowName; },
                 order: RG.CAL.DOW },
-    date:     { label: 'Date', domains: ['sales', 'labor'], of: function (f) { return RG.CAL.usDate(f.iso); } },
+    date:     { label: 'Date', domains: ['sales', 'labor', 'offprem'], of: function (f) { return RG.CAL.usDate(f.iso); } },
     week:     { label: 'Week of period', domains: ['sales', 'labor'],
                 of: function (f) { return 'Week ' + RG.CAL.byIso[f.iso].weekInPeriod; } },
-    period:   { label: 'Period', domains: ['finance'], of: function (f) { return periodLabel(f.period); } }
+    period:   { label: 'Period', domains: ['finance'], of: function (f) { return periodLabel(f.period); } },
+    marketplace: { label: 'Marketplace', domains: ['offprem'], of: function (f) { return f.name; } },
+    mktkind:  { label: 'Channel type', domains: ['offprem'],
+                of: function (f) { return f.kind === 'first-party' ? 'First-party'
+                  : f.kind === 'catering' ? 'Catering marketplace' : 'Marketplace'; } }
   };
 
   /* ---------- measures ---------- */
@@ -68,7 +72,14 @@
     variance:   { label: 'Food variance', domain: 'finance', fmt: 'money', perm: 'margins', of: function (f) { return f.cogsVariance; } },
     fourWall:   { label: 'Four-wall EBITDA', domain: 'finance', fmt: 'money', perm: 'money', of: function (f) { return f.fourWall; } },
     occupancy:  { label: 'Occupancy cost', domain: 'finance', fmt: 'money', perm: 'money', of: function (f) { return f.occupancy; } },
-    covers:     { label: 'Covers', domain: 'finance', fmt: 'num', perm: null, of: function (f) { return f.covers; } }
+    covers:     { label: 'Covers', domain: 'finance', fmt: 'num', perm: null, of: function (f) { return f.covers; } },
+    mpGross:    { label: 'Marketplace gross', domain: 'offprem', fmt: 'money', perm: null, of: function (f) { return f.gross; } },
+    mpOrders:   { label: 'Delivery orders', domain: 'offprem', fmt: 'num', perm: null, of: function (f) { return f.orders; } },
+    mpCommission: { label: 'Commission paid', domain: 'offprem', fmt: 'money', perm: null, of: function (f) { return f.commission; } },
+    mpPromo:    { label: 'Promo funding', domain: 'offprem', fmt: 'money', perm: null, of: function (f) { return f.promo; } },
+    mpErrors:   { label: 'Error charges', domain: 'offprem', fmt: 'money', perm: null, of: function (f) { return f.errors; } },
+    mpRefunds:  { label: 'Refunds', domain: 'offprem', fmt: 'money', perm: null, of: function (f) { return f.refunds; } },
+    mpNet:      { label: 'Net remitted', domain: 'offprem', fmt: 'money', perm: null, of: function (f) { return f.net; } }
   };
 
   /* ---------- fact builders ---------- */
@@ -154,7 +165,23 @@
     return (cache[k] = out);
   }
 
+  function offpremFacts(units, period) {
+    var k = key('offprem', units, period);
+    if (cache[k]) return cache[k];
+    var out = [];
+    units.forEach(function (u) {
+      RG.CAL.daysIn(period).forEach(function (d) {
+        RG.dayMarketplace(u, d.iso).rows.forEach(function (r) {
+          r.dowName = RG.CAL.byIso[d.iso].dowName;
+          out.push(r);
+        });
+      });
+    });
+    return (cache[k] = out);
+  }
+
   function facts(domain, units, period) {
+    if (domain === 'offprem') return offpremFacts(units, period);
     if (domain === 'sales') return salesFacts(units, period);
     if (domain === 'cost') return costFacts(units, period);
     if (domain === 'labor') return laborFacts(units, period);

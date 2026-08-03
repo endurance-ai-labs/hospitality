@@ -86,7 +86,12 @@
 
     /* controllables */
     var deliverySales = s.byChannel.delivery || 0;
-    var deliveryFees = R.cents(deliverySales * 0.238);
+    /* The delivery fee line is the SUM of each marketplace's actual
+       commission, not a flat blended rate — DoorDash at 27% and
+       first-party at 3.1% are not the same expense. */
+    var deliveryFees = RG.periodDeliveryFees
+      ? RG.periodDeliveryFees(unitId, periodKey)
+      : R.cents(deliverySales * 0.238);
     var cardFees = R.cents(netSales * RATES.cardShare * RATES.cardFeeRate);
     var directOp = R.cents(netSales * RATES.directOperating);
     var marketing = R.cents(netSales * RATES.marketing *

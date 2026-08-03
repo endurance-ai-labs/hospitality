@@ -12,7 +12,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const FILES = [
   'rand.js', 'data-calendar.js', 'data-company.js', 'data-menu.js',
   'engine-sales.js', 'engine-labor.js', 'engine-cogs.js', 'engine-finance.js',
-  'engine-guest.js', 'engine-ops.js', 'model.js'
+  'engine-marketplace.js', 'engine-guest.js', 'engine-ops.js', 'model.js'
 ];
 
 const t0 = Date.now();
@@ -270,6 +270,27 @@ const ALL = M.units;
   eq('ingredient roll-up = P&L theoretical cost', ing, theo, 1.0);
   ok('ingredient roll-up is non-trivial', ing > 100000, `got ${Math.round(ing)}`);
   console.log(`  [14] Ingredient roll-up ties      2 checks`);
+}
+
+
+/* ---- 15. marketplace split foots to the delivery channel ----
+   The off-premise page slices delivery revenue across DoorDash, Uber
+   Eats, Grubhub and the rest. If that split does not sum back to the
+   channel the sales engine produced, the page and the P&L are telling
+   the prospect two different numbers. */
+{
+  for (const uid of ALL) {
+    const s = RG.periodSales(uid, CUR);
+    const mp = RG.periodMarketplace(uid, CUR);
+    eq(`marketplace gross = delivery channel — ${uid}`, mp.total.gross, s.byChannel.delivery || 0, 0.5);
+    const parts = mp.rows.reduce((a, r) => C(a + r.commission + r.promo + r.errors + r.refunds + r.net), 0);
+    eq(`marketplace deductions + net = gross — ${uid}`, parts, mp.total.gross, 0.5);
+    const pl = RG.periodPL(uid, CUR);
+    eq(`P&L delivery fee = Σ commissions — ${uid}`, pl.deliveryFees, mp.total.commission, 0.05);
+  }
+  ok('every restaurant lists at least three marketplaces',
+     ALL.every(uid => RG.marketplacesFor(uid).length >= 3));
+  console.log(`  [15] Marketplace reconciliation   ${ALL.length} units x 3 + 1`);
 }
 
 /* ---- summary ---- */
