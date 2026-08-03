@@ -90,9 +90,9 @@
 
   var basisLabel = basis ? basis.label : 'no comparison';
   var kpis = [
-    tile({ label: 'Net sales', value: fmt$(g.netSales), accent: 'var(--color-blue)',
+    tile({ label: 'Net sales', value: fmt$(g.netSales), accent: 'var(--rg-rail)',
       chip: delta(function (x) { return x.netSales; }), sub: basisLabel,
-      spark: sparkArea(trend(function (x) { return x.netSales; }), { color: '#2766d6' }),
+      spark: sparkArea(trend(function (x) { return x.netSales; }), { color: 'var(--rg-spark)' }),
       exp: { value: fmt$c(g.netSales),
         formula: 'Σ (item quantity × menu price) − discounts − comps',
         inputs: [['Gross sales', fmt$c(g.grossSales)], ['Discounts', '−' + fmt$c(g.discounts)],
@@ -100,18 +100,18 @@
         source: ['Toast', 'Square'], period: periodLabel(CUR) + ' · ' + periodRange(CUR),
         note: 'Built up from item-level PMIX, not entered as a total.', drill: 'Sales & Traffic' } }),
 
-    tile({ label: 'Covers', value: fmtNum(g.covers), accent: '#eb6834',
+    tile({ label: 'Covers', value: fmtNum(g.covers), accent: 'var(--rg-rail)',
       chip: delta(function (x) { return x.covers; }), sub: fmt$c(g.avgCheck) + ' avg check',
-      spark: sparkArea(trend(function (x) { return x.covers; }), { color: '#eb6834' }),
+      spark: sparkArea(trend(function (x) { return x.covers; }), { color: 'var(--rg-spark)' }),
       exp: { value: fmtNum(g.covers) + ' covers',
         formula: 'dine-in net sales ÷ per-person average, by restaurant',
         inputs: [['Checks', fmtNum(g.checks)], ['Average check', fmt$c(g.avgCheck)]],
         source: ['Toast', 'OpenTable'], period: periodLabel(CUR) } }),
 
-    tile({ label: 'Prime cost', value: fmtPct(g.primePct), accent: g.primePct > 0.62 ? 'var(--color-red)' : 'var(--color-green)',
+    tile({ label: 'Prime cost', value: fmtPct(g.primePct), accent: g.primePct > 0.62 ? 'var(--color-red)' : 'var(--rg-rail)',
       chip: delta(function (x) { return x.primePct; }, true), sub: 'target ≤ 62.0%',
       meter: g.primePct / 0.75,
-      spark: sparkArea(trend(function (x) { return -x.primePct; }), { color: '#1baf7a' }),
+      spark: sparkArea(trend(function (x) { return -x.primePct; }), { color: 'var(--rg-spark)' }),
       exp: { value: fmtPct(g.primePct),
         formula: '(cost of goods + total labor) ÷ net sales',
         inputs: [['Cost of goods', fmt$(g.cogs) + '  (' + fmtPct(g.cogsPct) + ')'],
@@ -121,10 +121,10 @@
         note: 'The number full-service operators actually run the business on.',
         drill: 'P&L by Unit' } }),
 
-    tile({ label: 'Four-wall EBITDA', value: fmt$(g.fourWall), accent: '#eda100',
+    tile({ label: 'Four-wall EBITDA', value: fmt$(g.fourWall), accent: 'var(--rg-rail)',
       chip: delta(function (x) { return x.fourWall; }), sub: fmtPct(g.fourWallPct) + ' margin',
       meter: g.fourWallPct / 0.25,
-      spark: sparkArea(trend(function (x) { return x.fourWall; }), { color: '#eda100' }),
+      spark: sparkArea(trend(function (x) { return x.fourWall; }), { color: 'var(--rg-spark)' }),
       exp: { value: fmt$c(g.fourWall),
         formula: 'net sales − prime cost − controllables − occupancy',
         inputs: [['Net sales', fmt$(g.netSales)], ['Prime cost', '−' + fmt$(g.primeCost)],
@@ -132,10 +132,10 @@
         source: ['QBO', 'Lease'], period: periodLabel(CUR),
         note: 'Before corporate G&A of ' + fmt$(g.ga) + '.', drill: 'P&L by Unit' } }),
 
-    tile({ label: 'Labor', value: fmtPct(g.laborPct), accent: '#e87ba4',
+    tile({ label: 'Labor', value: fmtPct(g.laborPct), accent: g.laborPct > 0.34 ? 'var(--color-amber)' : 'var(--rg-rail)',
       chip: delta(function (x) { return x.laborPct; }, true), sub: fmt$c(g.splh) + ' per labor hour',
       meter: g.laborPct / 0.45,
-      spark: sparkArea(trend(function (x) { return -x.laborPct; }), { color: '#e87ba4' }),
+      spark: sparkArea(trend(function (x) { return -x.laborPct; }), { color: 'var(--rg-spark)' }),
       exp: { value: fmtPct(g.laborPct),
         formula: 'total labor ÷ net sales',
         inputs: [['Wages + salaries + burden', fmt$(g.labor)], ['Hours', fmtNum(g.laborHours, 0)],
@@ -144,10 +144,11 @@
   ];
 
   if (margins) kpis.push(tile({
-    label: 'Food variance', value: fmt$(g.cogsVariance), accent: 'var(--color-red)',
+    label: 'Food variance', value: fmt$(g.cogsVariance),
+    accent: (g.cogsVariance / (g.cogsTheo || 1)) > 0.04 ? 'var(--color-amber)' : 'var(--rg-rail)',
     chip: delta(function (x) { return x.cogsVariance; }, true),
     sub: fmtPct(g.cogsVariance / (g.cogsTheo || 1)) + ' of theoretical',
-    spark: sparkArea(trend(function (x) { return -x.cogsVariance; }), { color: '#C96B57' }),
+    spark: sparkArea(trend(function (x) { return -x.cogsVariance; }), { color: 'var(--rg-spark-warn)' }),
     exp: { value: fmt$c(g.cogsVariance),
       formula: 'actual cost of goods − theoretical cost from recipes and PMIX',
       inputs: Object.keys(g.cogsDrivers).map(function (k) {

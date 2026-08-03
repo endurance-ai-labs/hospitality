@@ -21,6 +21,21 @@ function walk(dir, out = []) {
   return out;
 }
 
+/* Pull the shared stylesheet from the parent BEFORE hashing. The fork
+   kept its own stale copy once and the whole institutional pass — the
+   masthead, the signal band, the item-day matrix — silently never
+   reached it, so the page rendered as unstyled text. The fork owns its
+   data and its engines; it does not own the design system. */
+const sharedCss = path.join(ROOT, '..', 'css', 'rg.css');
+const forkCss = path.join(ROOT, 'css', 'rg.css');
+if (fs.existsSync(sharedCss)) {
+  const a = fs.readFileSync(sharedCss, 'utf8');
+  if (!fs.existsSync(forkCss) || fs.readFileSync(forkCss, 'utf8') !== a) {
+    fs.writeFileSync(forkCss, a);
+    console.log('  Shared stylesheet pulled from parent: css/rg.css');
+  }
+}
+
 const assets = [...walk(path.join(ROOT, 'js')), ...walk(path.join(ROOT, 'css'))].sort();
 const h = crypto.createHash('sha256');
 for (const f of assets) {
