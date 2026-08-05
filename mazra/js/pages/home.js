@@ -415,6 +415,7 @@
   ]);
 
   document.getElementById('app').innerHTML =
+    '<div class="rg-hero">' +
     '<div class="rg-masthead">' +
       '<div><div class="rg-eyebrow">' + esc(RG.COMPANY.name) + ' · Period Operating Report</div>' +
       '<h1>Executive Command Center</h1>' +
@@ -423,9 +424,10 @@
       '<div class="rg-stamp"><b>' + esc(periodLabel(CUR)) + '</b>' + esc(periodRange(CUR)) +
       '<br>' + srcChips('Toast', 'R365', '7shifts', 'QBO') + '</div>' +
     '</div>' +
+      '<div class="kpi-band">' + kpis.join('') + '</div>' +
+    '</div>' +
     RGScope.render() +
     signalBand +
-    '<div class="kpi-band">' + kpis.join('') + '</div>' +
     todaySection +
 
     card({ title: 'Needs attention',
